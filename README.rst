@@ -31,6 +31,8 @@ The "home" of the canonical / production version is at http://ehealth.or.ke/faci
 
 Credits
 --------
-Developed and maintained by `Savannah Informatics Limited`_ | info@savannahinformatics.com
+Developed by `Savannah Informatics Limited`_ | info@savannahinformatics.com
+Maintained by `HealthIT/University of Nairobi`_ | swaweru@healthit.uonbi.ac.ke
 
 .. _Savannah Informatics Limited: http://savannahinformatics.com/
+.. _HealthIT/UoN: http://healthit.uonbi.ac.ke/
