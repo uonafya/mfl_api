@@ -150,6 +150,84 @@ class AbstractBase(models.Model):
         default_permissions = ('add', 'change', 'delete', 'view', )
 
 
+class AbstractBaseMapping(models.Model):
+
+    id = models.AutoField(primary_key=True)
+    mfl_name = models.CharField(max_length=255)
+    mfl_code = models.IntegerField(default=0)
+    dhis_name = models.CharField(max_length=255, null=True, blank=True)
+    dhis_id = models.CharField(max_length=255, null=True, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @property
+    def get_dhis_id(self):
+        return self.dhis_id
+
+    @property
+    def get_dhis_name(self):
+        return self.dhis_name
+
+    @property
+    def get_mfl_name(self):
+        return self.mfl_name
+
+    @property
+    def get_mfl_code(self):
+        return self.mfl_code
+
+    def validate_updated_date_greater_than_created(self):
+        if timezone.is_naive(self.updated):
+            self.updated = get_utc_localized_datetime(self.updated)
+
+        if self.updated < self.created:
+            raise ValidationError(
+                'The updated date cannot be less than the created date')
+
+    def preserve_created(self):
+        """
+        Ensures that in subsequent times created and created_by fields
+        values are not overriden.
+        """
+        try:
+            original = self.__class__.objects.get(pk=self.pk)
+            self.created = original.created
+        except self.__class__.DoesNotExist:
+            LOGGER.info(
+                'preserve_created '
+                'Could not find an instance of {} with pk {} hence treating '
+                'this as a new record.'.format(self.__class__, self.pk))
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created = timezone.now()
+        self.updated = timezone.now()
+        self.full_clean(exclude=None)
+        self.preserve_created()
+        self.validate_updated_date_greater_than_created()
+        super(AbstractBaseMapping, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Mark the field model deleted
+        delete_child_instances(self)
+
+        self.deleted = True
+        self.save()
+
+    def __str__(self):
+        raise NotImplementedError(
+            "child models need to define their representation"
+        )
+
+    def __unicode__(self):
+        return self.__str__()
+
+    class Meta(object):
+        ordering = ('-updated', '-created',)
+        abstract = True
+        default_permissions = ('add', 'change', 'delete', 'view', )
+
+
 class SequenceMixin(object):
 
     """
