@@ -2,6 +2,7 @@
 
 import requests
 import base64
+import json
 
 from conn import myConnection
 
@@ -127,6 +128,12 @@ def update_subcounties (conn):
             cur_update.execute(query)
             print ("Updating " + str (name) + " ...")
             conn.commit()
+            pass
+
+        ignored_file = open("ignored.json", "w")
+        ignoredstr = json.dumps(ignored)
+        ignored_file.write (ignoredstr)
+
         print ("\n\n----------------\n\n")
 
 # correct_county_names(myConnection)
