@@ -157,6 +157,7 @@ class AbstractBaseMapping(models.Model):
     mfl_code = models.IntegerField(default=0)
     dhis_name = models.CharField(max_length=255, null=True, blank=True)
     dhis_id = models.CharField(max_length=255, null=True, blank=True)
+    dhis_parent_id = models.CharField(max_length=255, null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
