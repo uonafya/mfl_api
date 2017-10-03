@@ -1,11 +1,7 @@
 #!/home/elon/.virtualenv/mfl_api python2.7
 
-import psycopg2, datetime
-
-hostname = 'localhost'
-username = 'mfl'
-password = 'mfl'
-database = 'mfl'
+import datetime
+from conn import myConnection
 
 
 # Simple routine to run a query on a database and print the results:
@@ -84,7 +80,7 @@ def copy_wards(conn):
     cur_select.close()
 
 
-myConnection = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
+
 copy_counties(myConnection)
 copy_sub_counties(myConnection)
 copy_constituencies(myConnection)

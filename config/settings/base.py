@@ -40,11 +40,11 @@ ENV_DB = env.db()
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'HOST': ENV_DB['HOST'],
-        'NAME': ENV_DB['NAME'],
-        'PASSWORD': ENV_DB['PASSWORD'],
-        'PORT': ENV_DB['PORT'],
-        'USER': ENV_DB['USER'],
+        'HOST': 'localhost',
+        'NAME': 'mfl',
+        'PASSWORD': 'therealsam',
+        'PORT': '5432',
+        'USER': 'postgres',
     }
 }  # Env should have DATABASE_URL
 MIDDLEWARE_CLASSES = (

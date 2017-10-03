@@ -2,12 +2,8 @@
 
 import requests
 import base64
-import psycopg2
 
-hostname = 'localhost'
-username = 'mfl'
-password = 'mfl'
-database = 'mfl'
+from conn import myConnection
 
 
 def get_org_unit_ids(payload):
@@ -33,6 +29,22 @@ def get_org_unit_ids(payload):
     return response
 # HfVjCurKxh2
 
+# correct the county names
+def correct_county_names(conn):
+    tharaka = "UPDATE common_countymapping SET mfl_name = 'THARAKA NITHI' WHERE mfl_name LIKE '%THARAKA%'"
+    muranga = "UPDATE common_countymapping SET mfl_name = 'MURANGA' WHERE mfl_name LIKE 'MURANG%'"
+    trans = "UPDATE common_countymapping SET mfl_name = 'TRANS-NZOIA' WHERE mfl_name LIKE 'TRANS%'"
+    elgeyo = "UPDATE common_countymapping SET mfl_name = 'ELGEYO-MARAKWET' WHERE mfl_name LIKE 'ELEGEYO%'"
+    queries = [tharaka, muranga, trans, elgeyo]
+
+    count = 3
+    for query in queries:
+        cur_update = conn.cursor()
+        cur_update.execute(query)
+        conn.commit()
+        print ("Rem : " + str (count))
+        count -= 1
+
 
 def update_counties(conn):
 
@@ -48,6 +60,7 @@ def update_counties(conn):
     MURANG'A , id 422 TO MURANGA
     TRANS NZOIA , id  427 TO TRANS-NZOIA
     ELEGEYO-MARAKWET id,  429 TO ELGEYO-MARAKWET
+
 
     """
 
@@ -69,7 +82,7 @@ def update_counties(conn):
         print("Payload: "+str(payload))
 
         response = get_org_unit_ids(payload)
-        print("Response: "+str(response))
+        # print("Response: "+str(response))
 
         cur_update = conn.cursor()
         cur_update.execute("UPDATE common_countymapping SET "+
@@ -77,12 +90,25 @@ def update_counties(conn):
                                   "dhis_id = '"+str(response["dhis_id"])+"' "+
                                   "WHERE id = '"+str(id)+"'")
         conn.commit()
-        print("Updated "+name+"\n\n")
+        print("Updated "+name+"\n\n_________________________\n\n")
         cur_update.close()
 
     cur_select.close()
     print("Done.")
 
+'''
+Fetch all sub-counties from local mapping table and get their org unit IDs and DHIS2 name from DHIS2
+'''
 
-conn = psycopg2.connect(host=hostname, user=username, password=password, dbname=database)
-update_counties(conn)
+def update_subcounties (conn):
+    """
+
+    :param conn:
+    :return:
+
+    *TODO
+    correct the following
+    """
+
+# correct_county_names(myConnection)
+# update_counties(myConnection)
