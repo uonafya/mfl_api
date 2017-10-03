@@ -92,23 +92,6 @@ def update_counties(conn):
     cur_select.close()
     print("Done.")
 
-'''
-Correct errors occuring in the local mapping of subcounties
-
-    *TODO
-    correct the following:
-    
-    Mfl - Banisa, DHIS2 Banissa : Modify the banisa query as appropriate MFL_CODE 
-'''
-
-# def correct_sub_county_names (conn):
-#     awendo = "DELETE FROM common_subcountymapping WHERE mfl_code = '3125'"
-#     banisa = ""
-#
-#     cur_correct = conn.cursor()
-#     cur_correct.execute (awendo)
-#     print ("-----------\nDeleted redundant Awendo\n--------------")
-#     conn.commit()
 
 '''
 Fetch all sub-counties from local mapping table and get their org unit IDs and DHIS2 name from DHIS2
@@ -135,16 +118,17 @@ def update_subcounties (conn):
         print("Processing " + name + "...")
         response = get_org_unit_ids(name, 3)
         # print ("Response " + str (response))
-
-
-
-
-
+        if response == False:
+            ignored.append ([id, name, code])
+            print ("Ignoring " + name)
+        else:
+            cur_update = conn.cursor()
+            query = "UPDATE common_subcountymapping SET dhis_name = '"+str(response['dhis_name'])+"', dhis_id = '"+str(response['dhis_id'])+"' WHERE id = '"+str(id)+"'"
+            cur_update.execute(query)
+            print ("Updating " + str (name) + " ...")
+            conn.commit()
         print ("\n\n----------------\n\n")
 
 # correct_county_names(myConnection)
 # update_counties(myConnection)
-# correct_sub_county_names(myConnection)
-# update_subcounties(myConnection)
-
-r = get_org_unit_ids("banisa sub county", 3)
+update_subcounties(myConnection)
