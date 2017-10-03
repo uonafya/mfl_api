@@ -150,15 +150,35 @@ def correct_subcounties (conn):
     print ("\n-------------------\nTrying to correct {} Subcounties\n".format(len(sc)))
 
     name_excludes = ['sub', 'county', 'Sub', 'County']
-    names_to_correct = [ str (' '.join ([x for x in subcounty[1].split(' ') if not x in name_excludes]).strip()) for subcounty in sc]
-    unique_names = list (set (names_to_correct))
+    names_to_correct = [[subcounty[0], str (' '.join ([x for x in subcounty[1].split(' ') if not x in name_excludes]).strip())] for subcounty in sc]
 
-    for subcounty in unique_names:
+    ignored = []
+
+    for id, subcounty in names_to_correct:
         r = get_org_unit_ids(subcounty, 3, "ilike")
-        print (subcounty, r)
+        if not r:
+            print ("---\nSkipping " + subcounty)
+            ignored.append (subcounty)
+        else:
+            query = "UPDATE common_subcountymapping SET dhis_name = '" + str(
+                r['dhis_name']) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
+                r['dhis_parent']) + "'  WHERE id = '" + str(id) + "'"
+            print ("Updating " + subcounty)
+            cur_update = conn.cursor()
+            cur_update.execute(query)
+            conn.commit()
+
+    ignored_file = open("ignored_2.json", "w")
+    ignoredstr = json.dumps(ignored)
+    ignored_file.write(ignoredstr)
+    print ("Done")
+
+
 
 
 # correct_county_names(myConnection)
 # update_counties(myConnection)
-update_subcounties(myConnection)
+# update_subcounties(myConnection)
 # correct_subcounties(myConnection)
+'''
+At this Point, stop and clean the subcounties in the ignored_2.json'''
