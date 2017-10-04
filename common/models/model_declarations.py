@@ -325,6 +325,22 @@ class WardMapping(AbstractBaseMapping):
         verbose_name_plural = 'ward_mappings'
 
 
+@reversion.register
+@encoding.python_2_unicode_compatible
+class OrgUnitGroupsMapping(AbstractBaseMapping):
+
+    group_set_name = models.CharField(max_length=255, null=True, blank=True)
+    group_set_id = models.CharField(max_length=255, null=True, blank=True)
+    group_set_code = models.CharField(max_length=255, null=True, blank=True)
+    group_code = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.mfl_name
+
+    class Meta(AdministrativeUnitBase.Meta):
+        verbose_name_plural = 'org_unit_groups_mappings'
+
+
 @reversion.register(follow=['user', 'county'])
 @encoding.python_2_unicode_compatible
 class UserCounty(UserAdminAreaLinkageMixin, AbstractBase):
