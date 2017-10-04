@@ -1,17 +1,20 @@
 import requests
 import base64
 
+url = "http://localhost:8080/api/organisationUnits/"
+cred = base64.b64encode("admin:district")
+
 
 def weka(payload):
     r = requests.put(
-        "http://test.hiskenya.org/api/25/organisationUnits/"+payload["id"],
+        url+payload["id"],
         headers={
-            "Authorization": "Basic " + base64.b64encode("healthit:hEALTHIT2017"),
+            "Authorization": "Basic " + cred,
             "Accept": "application/json"
         },
         json=payload["data"]
     )
-    print(r.json())
+    print(r)
 
 
 def sahihisha(jina):
@@ -19,23 +22,25 @@ def sahihisha(jina):
 
 
 r = requests.get(
-        "http://test.hiskenya.org/api/25/organisationUnits",
+        url,
         headers={
-            "Authorization": "Basic "+base64.b64encode("healthit:hEALTHIT2017"),
+            "Authorization": "Basic "+cred,
             "Accept": "application/json"
         },
         params={
             "paging": "false",
-            "level" : 4,
-            "fields" : '[id,name,openingDate,shortName]'
+            "level" : 3,
+            "fields" : '[*]'
         }
     )
+
 
 orgunits = r.json()['organisationUnits']
 
 total = len(orgunits)
 percentage_complete = 0
 counter = 0
+corrected = 0
 
 for orgunit in orgunits:
     counter += 1
@@ -43,21 +48,20 @@ for orgunit in orgunits:
 
     print ("\033[0mProcessing " + orgunit['name'] + " ({}% Completed)...\n".format(str(percentage_complete)))
 
+    original_name = orgunit["name"]
+    orgunit["name"] = sahihisha(orgunit["name"])
+
     payload = {
         "id": orgunit["id"],
-        "data": {
-            "name": sahihisha(orgunit["name"]),
-            "shortName": sahihisha(orgunit["shortName"]),
-            "openingDate": orgunit["openingDate"]
-        }
+        "data": orgunit
     }
 
-    if sahihisha(orgunit["name"]) != orgunit["name"]:
+    if sahihisha(orgunit["name"]) != original_name:
         weka(payload)
+        corrected += 1
         print ("\033[92mFinished Processing " + orgunit['name'] + "...\n")
     else:
         print ("\033[91mSkipped Processing " + orgunit['name'] + "...\n")
 
 
-
-print ("\033[92mDone!\033[0m")
+print ("\033[92mNimemaliza! Tumeweka - "+ str(corrected) +"\033[0m")

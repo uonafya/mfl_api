@@ -6,14 +6,15 @@ import json
 
 from conn import myConnection
 
+url = "http://localhost:8080/api/organisationUnits/"
+cred = base64.b64encode("admin:district")
+
 
 def get_org_unit_ids(name, level=2, filter='eq'):
-
-
     r = requests.get(
-        "http://test.hiskenya.org/api/25/organisationUnits",
+        url,
         headers={
-            "Authorization": "Basic "+base64.b64encode("healthit:hEALTHIT2017"),
+            "Authorization": "Basic "+cred,
             "Accept": "application/json"
         },
         params={
@@ -24,6 +25,7 @@ def get_org_unit_ids(name, level=2, filter='eq'):
     )
     # print("Get Org Unit ID Response", r.json())
     print("Raw Response: "+str(r.json()))
+    print(r.url)
 
     if len (r.json()['organisationUnits']) < 1:
         return False
@@ -113,10 +115,11 @@ def update_subcounties (conn):
     """
 
     cur_select = conn.cursor()
-    # cur_select.execute ("SELECT id, mfl_name, mfl_code FROM common_subcountymapping WHERE mfl_name > 'gilgil' ORDER BY mfl_name ")
-    cur_select.execute("SELECT id, mfl_name, mfl_code FROM common_subcountymapping WHERE id = '376'")
+    cur_select.execute ("SELECT id, mfl_name, mfl_code FROM common_subcountymapping WHERE mfl_name > 'Ugunja' ORDER BY mfl_name ")
+    # cur_select.execute("SELECT id, mfl_name, mfl_code FROM common_subcountymapping WHERE id = '582'")
     ignored = []
     for id, name, code in cur_select.fetchall():
+        name = name.strip()
         name_excludes = ['sub', 'county', 'Sub', 'County ']
         name = str (' '.join ([x for x in name.split(' ') if not x in name_excludes]))
         name = str(name).lower() + " Sub County"
