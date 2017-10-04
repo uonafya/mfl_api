@@ -6,25 +6,26 @@ import json
 
 from conn import myConnection
 
+url = "http://localhost:8080/api/organisationUnits/"
+cred = base64.b64encode("admin:district")
+
 
 def get_org_unit_ids(name, level=2, filter='eq'):
-
-
     r = requests.get(
-        "http://test.hiskenya.org/api/25/organisationUnits",
+        url,
         headers={
-            "Authorization": "Basic "+base64.b64encode("healthit:hEALTHIT2017"),
+            "Authorization": "Basic "+cred,
             "Accept": "application/json"
         },
         params={
             "filter": "name:"+filter+":"+name,
             "fields": "[name,id,parent]",
             "paging": "false",
-            "level" : level
         }
     )
     # print("Get Org Unit ID Response", r.json())
     print("Raw Response: "+str(r.json()))
+    print(r.url)
 
     if len (r.json()['organisationUnits']) < 1:
         return False
@@ -87,7 +88,7 @@ def update_counties(conn):
         response = get_org_unit_ids(name, 2)
         cur_update = conn.cursor()
         cur_update.execute("UPDATE common_countymapping SET "+
-                                  "dhis_name = '"+str(response["dhis_name"])+"', "+
+                                  "dhis_name = '"+str(response["dhis_name"].replace ("'", "''"))+"', "+
                                   "dhis_id = '"+str(response["dhis_id"])+"', "+
                                   "dhis_parent_id = '" +kenya_id+ "'" +
                                   "WHERE id = '"+str(id)+"'")
@@ -114,26 +115,28 @@ def update_subcounties (conn):
     """
 
     cur_select = conn.cursor()
-    cur_select.execute ("SELECT id, mfl_name, mfl_code FROM common_subcountymapping")
+    cur_select.execute ("SELECT id, mfl_name, mfl_code FROM common_subcountymapping WHERE mfl_name > 'Ugunja' ORDER BY mfl_name ")
+    # cur_select.execute("SELECT id, mfl_name, mfl_code FROM common_subcountymapping WHERE id = '582'")
     ignored = []
     for id, name, code in cur_select.fetchall():
-
+        name = name.strip()
+        name_excludes = ['sub', 'county', 'Sub', 'County ']
+        name = str (' '.join ([x for x in name.split(' ') if not x in name_excludes]))
         name = str(name).lower() + " Sub County"
         name = name.title()
 
         print("Processing " + name + "...")
         response = get_org_unit_ids(name, 3)
         # print ("Response " + str (response))
-        if not response:
-            ignored.append ([id, name, code])
-            print ("Ignoring " + name)
-        else:
-            cur_update = conn.cursor()
-            query = "UPDATE common_subcountymapping SET dhis_name = '"+str(response['dhis_name'])+"', dhis_id = '"+str(response['dhis_id'])+"', dhis_parent_id = '"+ str (response['dhis_parent'] )+"'  WHERE id = '"+str(id)+"'"
-            cur_update.execute(query)
-            print ("Updating " + str (name) + " ...")
-            conn.commit()
-            pass
+        # if not response:
+        #     ignored.append ([id, name, code])
+        #     print ("Ignoring " + name)
+        # else:
+        cur_update = conn.cursor()
+        query = "UPDATE common_subcountymapping SET dhis_name = '"+str(response["dhis_name"].replace ("'", "''"))+"', dhis_id = '"+str(response['dhis_id'])+"', dhis_parent_id = '"+ str (response['dhis_parent'] )+"'  WHERE id = '"+str(id)+"'"
+        cur_update.execute(query)
+        print ("Updating " + str (name) + " ...")
+        conn.commit()
 
         ignored_file = open("ignored.json", "w")
         ignoredstr = json.dumps(ignored)
@@ -161,7 +164,7 @@ def correct_subcounties (conn):
             ignored.append (subcounty)
         else:
             query = "UPDATE common_subcountymapping SET dhis_name = '" + str(
-                r['dhis_name']) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
+                r["dhis_name"].replace ("'", "''")) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
                 r['dhis_parent']) + "'  WHERE id = '" + str(id) + "'"
             print ("Updating " + subcounty)
             cur_update = conn.cursor()
@@ -230,6 +233,8 @@ def clean_mfl_subcounties (conn):
         name = str(name).lower()
         name = name.title()
 
+
+
         # r = get_org_unit_ids(name, 3, "ilike")
         # if not r:
         #     print ("Unable to resolve " + name)
@@ -244,14 +249,43 @@ def clean_mfl_subcounties (conn):
         #
 
 
+"""
+Update the Wards
+"""
 
+def update_wards (conn):
+    fetch_cur = conn.cursor()
+    fetch_cur.execute ("SELECT id, mfl_name, mfl_code FROM common_wardmapping ORDER BY mfl_name ASC")
+    print ("We have {} Wards in MFL".format(str(fetch_cur.rowcount)))
+    ignored, found = 0, 0
 
+    for id, name, code in fetch_cur.fetchall():
+        name = str(name).lower() + " Ward"
+        name = name.title()
 
+        r = get_org_unit_ids(name, 4, "eq")
+        if not r:
+            ignored += 1
+        else :
+            cur_update = conn.cursor()
+            query = "UPDATE common_wardmapping SET dhis_name = '" + str(
+                r["dhis_name"].replace ("'", "''")) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
+                r['dhis_parent']) + "'  WHERE id = '" + str(id) + "'"
+            cur_update.execute (query)
+            conn.commit()
+            print ("Updating " + name)
+
+            found += 1
+
+    print (found, ignored)
 
 # correct_county_names(myConnection)
 # update_counties(myConnection)
-# update_subcounties(myConnection)
+update_subcounties(myConnection)
 # correct_subcounties(myConnection)
 '''
-At this Point, stop and clean the subcounties in the ignored_2.json'''
-clean_mfl_subcounties(myConnection)
+At this Point, stop and clean the subcounties in the ignored_2.json (better to fetch from the table where dhis_name IS NULL
+'''
+# clean_mfl_subcounties(myConnection)
+# update_wards(myConnection)
+
