@@ -80,7 +80,6 @@ def copy_wards(conn):
     cur_select.close()
 
 
-
 copy_counties(myConnection)
 copy_sub_counties(myConnection)
 copy_constituencies(myConnection)

@@ -329,9 +329,7 @@ class WardMapping(AbstractBaseMapping):
 @encoding.python_2_unicode_compatible
 class OrgUnitGroupsMapping(AbstractBaseMapping):
 
-    group_set_name = models.CharField(max_length=255, null=True, blank=True)
-    group_set_id = models.CharField(max_length=255, null=True, blank=True)
-    group_set_code = models.CharField(max_length=255, null=True, blank=True)
+    group_set_ids = models.TextField(null=True, blank=True)
     group_code = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):

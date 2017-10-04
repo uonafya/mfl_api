@@ -153,8 +153,8 @@ class AbstractBase(models.Model):
 class AbstractBaseMapping(models.Model):
 
     id = models.AutoField(primary_key=True)
-    mfl_name = models.CharField(max_length=255)
-    mfl_code = models.IntegerField(default=0)
+    mfl_name = models.CharField(max_length=255, null=True, blank=True)
+    mfl_code = models.IntegerField(default=0, null=True, blank=True)
     dhis_name = models.CharField(max_length=255, null=True, blank=True)
     dhis_id = models.CharField(max_length=255, null=True, blank=True)
     dhis_parent_id = models.CharField(max_length=255, null=True, blank=True)
