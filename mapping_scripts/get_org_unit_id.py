@@ -173,6 +173,78 @@ def correct_subcounties (conn):
     ignored_file.write(ignoredstr)
     print ("Done")
 
+'''
+Go through the 'bad' subcounties
+TODO : 
+    Remove Banisa from MFL, The correct one is Banissa and is already mapped
+    Change Cherengany in MFL to Cherangany
+    Two occurences of Chuka/ Igambang'ombe - Split the two as they are separate subcounties
+    Change Kibera in MFL to Kibra
+    Kisumu Central missing in DHIS2
+    Change Kituicentral in MFL to Kitui Central
+    Maragwa not found in DHIS2
+    Change Mt. Elgon in MFL to Mt Elgon
+    Change Oljorok in MFL to Oljoroorok
+    Change Olkalau in MFL to Olkalou
+    Change Sigowet / Soin in MFL to Sigowet/Soin
+    Webuye East in DHIS2 has two spaces in between   
+    
+'''
+
+def clean_mfl_subcounties (conn):
+    sc = json.loads(open("ignored_2.json").read())
+    print (str (len(sc)) +  " Sub counties have cleaning problems pending")
+
+    banisa = "";
+    cherangany = "UPDATE common_subcountymapping SET mfl_name = 'Cherangany' WHERE mfl_name = 'Cherengany' "
+    chuka = ""
+    igambangombe = ""
+    kibra = "UPDATE common_subcountymapping SET mfl_name = 'Kibra' WHERE mfl_name = 'Kibera' "
+    kisumu_central = ""
+    kitui_central = "UPDATE common_subcountymapping SET mfl_name = 'Kitui Central' WHERE mfl_name = 'Kituicentral' "
+    maragwa = ""
+    mt_elgon = "UPDATE common_subcountymapping SET mfl_name = 'Mt Elgon' WHERE mfl_name = 'Mt Elgon' "
+    oljoro = "UPDATE common_subcountymapping SET mfl_name = 'Oljoroorok' WHERE mfl_name = 'Oljorok' "
+    olkalau = "UPDATE common_subcountymapping SET mfl_name = 'Olkalou' WHERE mfl_name = 'Olkalau' "
+    sigowet = "UPDATE common_subcountymapping SET mfl_name = 'Sigowet/Soin' WHERE mfl_name = 'Sigowet / Soin' "
+    webuye_east = "UPDATE common_subcountymapping SET mfl_name = 'Webuye  East' WHERE mfl_name = 'Webuye East'"
+
+    queries = [banisa, cherangany, chuka, igambangombe, kibra, kisumu_central, kitui_central, maragwa, mt_elgon, oljoro, olkalau, sigowet, webuye_east]
+    q = ""
+    for query in queries:
+        if len(query) > 2:
+            q += query + ";\n"
+            # cur_qry = conn.cursor()
+            # cur_qry.execute(query)
+            # conn.commit()
+            # cur_qry.close()
+
+    print (q)
+
+#     get the subcounties that are still null
+    still_null_cur = conn.cursor()
+    still_null_cur.execute ("SELECT mfl_name FROM common_subcountymapping WHERE dhis_name IS NULL")
+
+
+    for name in still_null_cur.fetchall():
+        name = str(name).lower()
+        name = name.title()
+
+        # r = get_org_unit_ids(name, 3, "ilike")
+        # if not r:
+        #     print ("Unable to resolve " + name)
+        # else:
+        #     query = "UPDATE common_subcountymapping SET dhis_name = '" + str(
+        #         r['dhis_name']) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
+        #         r['dhis_parent']) + "'  WHERE id = '" + str(id) + "'"
+        #     print ("Updating " + name)
+        #     cur_update = conn.cursor()
+        #     cur_update.execute(query)
+        #     conn.commit()
+        #
+
+
+
 
 
 
@@ -182,3 +254,4 @@ def correct_subcounties (conn):
 # correct_subcounties(myConnection)
 '''
 At this Point, stop and clean the subcounties in the ignored_2.json'''
+clean_mfl_subcounties(myConnection)
