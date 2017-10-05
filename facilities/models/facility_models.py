@@ -1315,7 +1315,7 @@ class DhisAuth(ApiAuthentication):
 
         return outer_wrap
 
-    @set_interval(30.0)
+    @set_interval(300.0)
     def refresh_oauth2_token(self):
         r = requests.post(
             self.server+"uaa/oauth/token",
@@ -1331,7 +1331,7 @@ class DhisAuth(ApiAuthentication):
         )
 
         response = str(r.json())
-        # print("Response @ refresh_oauth2 ", response)
+        print("Response @ refresh_oauth2 ", response)
         self.session_store[self.oauth2_token_variable_name] = response
         self.session_store.save()
 
@@ -1350,7 +1350,7 @@ class DhisAuth(ApiAuthentication):
         )
 
         response = str(r.json())
-        # print("Response @ get_oauth2 ", response)
+        # print("Response @ get_oauth2 ", response, r.url, r.status_code)
         self.session_store[self.oauth2_token_variable_name] = response
         self.session_store.save()
         self.refresh_oauth2_token()
@@ -1381,6 +1381,26 @@ class DhisAuth(ApiAuthentication):
                 }
             )
 
+    def get_org_unit(self, org_unit_id):
+        r = requests.get(
+            self.server + "api/"+org_unit_id,
+            headers={
+                "Authorization": "Bearer " +
+                                 json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                                            .replace("'", '"'))["access_token"],
+                "Accept": "application/json"
+            }
+        )
+        print("Get Org Unit Response", r.json())
+        if str(r.status_code) == "200":
+            return r.json()
+        else:
+            raise ValidationError(
+                {
+                    "Error!": ["Unable to get corresponding faciity in DHIS2"]
+                }
+            )
+
     def get_parent_id(self, facility_name):
         r = requests.get(
             self.server+"api/organisationUnits.json",
@@ -1396,7 +1416,7 @@ class DhisAuth(ApiAuthentication):
                 "paging": "false"
             }
         )
-        print(r.json())
+        print(r.status_code, r.url)
         dhis2_facility_name = r.json()["organisationUnits"][0]["name"].lower()
         facility_name = str(facility_name)+ " Ward"
         facility_name = facility_name.lower()
@@ -1558,24 +1578,35 @@ class FacilityUpdates(AbstractBase):
 
         dhis2_parent_id = self.dhis2_api_auth.get_parent_id(self.facility.ward_name)
         dhis2_org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
+        new_facility_updates_payload = self.dhis2_api_auth.get_org_unit(self.dhis2_org_unit_id)
 
-        new_facility_updates_payload = {
-            "code": str(self.facility.code),
-            "name": str(self.facility.name),
-            "shortName": str(self.facility.name),
-            "displayName": str(self.facility.official_name),
-            "parent": {
-                "id": dhis2_parent_id
-            },
-            "openingDate": self.facility.date_established.strftime("%Y-%m-%d"),
-            "coordinates": self.dhis2_api_auth.format_coordinates(
+        # new_facility_updates_payload = {
+        #     "code": str(self.facility.code),
+        #     "name": str(self.facility.name),
+        #     "shortName": str(self.facility.name),
+        #     "displayName": str(self.facility.official_name),
+        #     "parent": {
+        #         "id": dhis2_parent_id
+        #     },
+        #     "openingDate": self.facility.date_established.strftime("%Y-%m-%d"),
+        #     "coordinates": self.dhis2_api_auth.format_coordinates(
+        #         re.search(r'\((.*?)\)', str(FacilityCoordinates.objects.values('coordinates')
+        #                                     .get(facility_id=self.facility.id)['coordinates'])).group(1))
+        # }
+
+        new_facility_updates_payload["code"] = str(self.facility.code)
+        new_facility_updates_payload["name"] = str(self.facility.name)
+        new_facility_updates_payload["shortName"] = str(self.facility.name)
+        new_facility_updates_payload["displayName"] = str(self.facility.official_name)
+        new_facility_updates_payload["parent"]["id"] = dhis2_parent_id
+        new_facility_updates_payload["openingDate"] = str(self.facility.date_established.strftime("%Y-%m-%d"))
+        new_facility_updates_payload["coordinates"] = self.dhis2_api_auth.format_coordinates(
                 re.search(r'\((.*?)\)', str(FacilityCoordinates.objects.values('coordinates')
                                             .get(facility_id=self.facility.id)['coordinates'])).group(1))
-        }
 
         print("Names;", "Official Name:", self.facility.official_name, "Name:", self.facility.name)
 
-        print("New Facility Push Payload => ", new_facility_updates_payload)
+        print("Facility Updates Push Payload => ", new_facility_updates_payload)
         self.dhis2_api_auth.push_facility_updates_to_dhis2(dhis2_org_unit_id, new_facility_updates_payload)
 
     def update_facility(self):
