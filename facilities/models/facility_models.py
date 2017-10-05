@@ -1331,7 +1331,7 @@ class DhisAuth(ApiAuthentication):
         )
 
         response = str(r.json())
-        print("Response @ refresh_oauth2 ", response)
+        # print("Response @ refresh_oauth2 ", response)
         self.session_store[self.oauth2_token_variable_name] = response
         self.session_store.save()
 
@@ -1359,9 +1359,10 @@ class DhisAuth(ApiAuthentication):
         r = requests.get(
             self.server + "api/organisationUnits.json",
             headers={
-                "Authorization": "Bearer " +
-                                 json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                                            .replace("'", '"'))["access_token"],
+                # "Authorization": "Bearer " +
+                #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                #                             .replace("'", '"'))["access_token"],
+                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
             params={
@@ -1383,15 +1384,16 @@ class DhisAuth(ApiAuthentication):
 
     def get_org_unit(self, org_unit_id):
         r = requests.get(
-            self.server + "api/"+org_unit_id,
+            self.server + "api/organisationUnits/"+org_unit_id,
             headers={
-                "Authorization": "Bearer " +
-                                 json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                                            .replace("'", '"'))["access_token"],
+                # "Authorization": "Bearer " +
+                #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                #                             .replace("'", '"'))["access_token"],
+                "Authorization": "Basic "+base64.b64encode(self.username+":"+self.password),
                 "Accept": "application/json"
             }
         )
-        print("Get Org Unit Response", r.json())
+        print("Get Org Unit Response", r.url, r.status_code)
         if str(r.status_code) == "200":
             return r.json()
         else:
@@ -1405,8 +1407,9 @@ class DhisAuth(ApiAuthentication):
         r = requests.get(
             self.server+"api/organisationUnits.json",
             headers={
-                "Authorization": "Bearer " + json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                    .replace("'", '"'))["access_token"],
+                # "Authorization": "Bearer " + json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                #     .replace("'", '"'))["access_token"],
+                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
             params={
@@ -1436,8 +1439,9 @@ class DhisAuth(ApiAuthentication):
         r = requests.post(
             self.server+"api/organisationUnits",
             headers={
-                "Authorization": "Bearer " + json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                                                        .replace("'", '"'))["access_token"],
+                # "Authorization": "Bearer " + json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                #                                         .replace("'", '"'))["access_token"],
+                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
             json=new_facility_payload
@@ -1458,9 +1462,10 @@ class DhisAuth(ApiAuthentication):
         r = requests.put(
             self.server + "api/organisationUnits/"+org_unit_id,
             headers={
-                "Authorization": "Bearer " +
-                                 json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                                            .replace("'", '"'))["access_token"],
+                # "Authorization": "Bearer " +
+                #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                #                             .replace("'", '"'))["access_token"],
+                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
             json=facility_updates_payload
@@ -1474,6 +1479,41 @@ class DhisAuth(ApiAuthentication):
                     "Error!": ["Unable to push facility updates to DHIS2"]
                 }
             )
+
+    def add_org_unit_to_group(self, org_unit_group_id, org_unit_id):
+
+        r_get_group = requests.get(
+            self.server+"api/organisationUnitGroups/"+org_unit_group_id,
+            headers={
+                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Accept": "application/json"
+            },
+            params={
+                "fields": "[*]"
+            }
+        )
+
+        organisation_group = r_get_group.json()
+        print(organisation_group)
+        organisation_group["organisationUnits"].append({"id":org_unit_id})
+
+        r = requests.put(
+            self.server+"api/organisationUnitGroups/"+org_unit_group_id,
+            headers={
+                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Accept": "application/json"
+            },
+            json=organisation_group
+        )
+
+        if str(r.status_code) != "200":
+            raise ValidationError(
+                {
+                    "Error!": ["Failed to assign organisation group to the facility being processed"]
+                }
+            )
+        else:
+            print ("Successfully Assigned Group")
 
     def format_coordinates(self, str_coordinates):
         coordinates_str_list = str_coordinates.split(" ")
@@ -1578,7 +1618,7 @@ class FacilityUpdates(AbstractBase):
 
         dhis2_parent_id = self.dhis2_api_auth.get_parent_id(self.facility.ward_name)
         dhis2_org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
-        new_facility_updates_payload = self.dhis2_api_auth.get_org_unit(self.dhis2_org_unit_id)
+        new_facility_updates_payload = self.dhis2_api_auth.get_org_unit(dhis2_org_unit_id)
 
         # new_facility_updates_payload = {
         #     "code": str(self.facility.code),
@@ -1604,7 +1644,7 @@ class FacilityUpdates(AbstractBase):
                 re.search(r'\((.*?)\)', str(FacilityCoordinates.objects.values('coordinates')
                                             .get(facility_id=self.facility.id)['coordinates'])).group(1))
 
-        print("Names;", "Official Name:", self.facility.official_name, "Name:", self.facility.name)
+        # print("Names;", "Official Name:", self.facility.official_name, "Name:", self.facility.name)
 
         print("Facility Updates Push Payload => ", new_facility_updates_payload)
         self.dhis2_api_auth.push_facility_updates_to_dhis2(dhis2_org_unit_id, new_facility_updates_payload)
@@ -1895,7 +1935,8 @@ class FacilityApproval(AbstractBase):
         else:
             self.facility.rejected = False
             self.facility.approved = True
-            self.push_new_facility()
+            # self.push_new_facility()
+            self.assign_org_unit_groups()
             self.facility.is_published = True
         self.facility.save(allow_save=True)
 
@@ -1903,6 +1944,59 @@ class FacilityApproval(AbstractBase):
         self.validate_rejection_comment()
         self.facility.save(allow_save=True)
         self.update_facility_rejection()
+
+    def assign_org_unit_groups(self):
+        # print("Facility Type Details: " + str(self.facility.facility_type))
+        # print("Facility Type Name: " + str(self.facility.facility_type_name))
+        # print("Facility Regulatory Body: " + str(self.facility.regulatory_body))
+        # print("Facility Type ID: " + str(self.facility.facility_type_id))
+        # print("Facility Owner Name: " + str(self.facility.owner_name))
+        # print("Facility Owner: " + str(self.facility.owner))
+
+        try:
+            facility_type = FacilityType.objects.values("sub_division").get(
+                name__exact=str(self.facility.facility_type_name))
+            facility_type = str(facility_type["sub_division"])
+            print("Facility Type: " + facility_type + "-")
+        except FacilityType.DoesNotExist:
+            facility_type = {"sub_division": "Stand Alone"}
+            facility_type = str(facility_type["sub_division"])
+            print("Facility Type @ Except: " + facility_type)
+
+        facility_type_details = str(self.facility.facility_type_name)
+        print("Facility Type Details: "+facility_type_details+"-")
+
+        facility_regulatory_body = str(self.facility.regulatory_body)
+        print("Facility Regulatory Body: " + facility_regulatory_body+"-")
+
+        facility_owner = str(self.facility.owner_name)
+        print("Facility Owner: " + facility_owner+"-")
+
+        from common.models import OrgUnitGroupsMapping
+        facility_type_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+            mfl_name__exact=facility_type)
+        facility_type_details_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+            mfl_name__exact=facility_type_details)
+        facility_regulatory_body_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+            mfl_name__exact=facility_regulatory_body)
+        facility_owner_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+            mfl_name__exact=facility_owner)
+
+        # print(facility_type_dhis_id["dhis_id"])
+
+        org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
+
+        self.dhis2_api_auth.add_org_unit_to_group(facility_type_dhis_id["dhis_id"], org_unit_id)
+        print("Assigned Group Facility Type")
+
+        self.dhis2_api_auth.add_org_unit_to_group(facility_type_details_dhis_id["dhis_id"], org_unit_id)
+        print("Assigned Group Facility Type Details")
+
+        self.dhis2_api_auth.add_org_unit_to_group(facility_regulatory_body_dhis_id["dhis_id"], org_unit_id)
+        print("Assigned Group Facility Regulatory Body")
+
+        self.dhis2_api_auth.add_org_unit_to_group(facility_owner_dhis_id["dhis_id"], org_unit_id)
+        print("Assigned Group Facility Owner")
 
     def push_new_facility(self):
         from mfl_gis.models import FacilityCoordinates
