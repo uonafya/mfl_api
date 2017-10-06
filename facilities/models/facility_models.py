@@ -1634,6 +1634,146 @@ class FacilityUpdates(AbstractBase):
         #                                     .get(facility_id=self.facility.id)['coordinates'])).group(1))
         # }
 
+        # try:
+        #     old_facility_type = str(
+        #         FacilityType.objects.values("sub_division").get(id=self.facility.facility_type_id)["sub_division"])
+        #     print("Old Facility Type: " + old_facility_type)
+        # except FacilityType.DoesNotExist:
+        #     old_facility_type = "Stand Alone"
+        #     print("Old Facility Type @ Except: "+old_facility_type)
+        #
+        # try:
+        #     old_facility_type_details = str(
+        #         FacilityType.objects.values("name").get(id=self.facility.facility_type_id)["name"])
+        #     print("Old Facility Type Details: " + old_facility_type_details)
+        # except FacilityType.DoesNotExist:
+        #     old_facility_type_details = "Other"
+        #     print("Old Facility Type Details @ Except: "+old_facility_type_details)
+        #
+        # try:
+        #     old_facility_regulatory_body = str(
+        #         RegulatingBody.objects.values("name").get(id=self.facility.regulatory_body_id)["name"])
+        #     print("Old Facility Regulatory Body: " + old_facility_regulatory_body)
+        # except RegulatingBody.DoesNotExist:
+        #     old_facility_regulatory_body = "Other"
+        #     print("Old Facility Regulatory Body @ Except: "+old_facility_regulatory_body)
+        #
+        # old_facility_owner_details = None
+        #
+        # try:
+        #     old_facility_owner_details = Owner.objects.values("name", "owner_type_id").get(id=self.facility.owner_id)
+        #     old_facility_owner = str(old_facility_owner_details["name"])
+        #     print("Old Facility Owner: " + old_facility_owner)
+        # except Owner.DoesNotExist:
+        #     old_facility_owner = "Other"
+        #     print("Old Facility Owner @ Except: "+old_facility_owner)
+        #
+        # try:
+        #     if old_facility_owner_details is None:
+        #         old_facility_owner_type = "Other"
+        #         print("Old Facility Owner @ Pass: " + old_facility_owner_type)
+        #         pass
+        #     else:
+        #         old_facility_owner_type = str(
+        #             OwnerType.objects.values("name").get(id=old_facility_owner_details["owner_type_id"]))
+        #     print("Old Facility Owner Type: " + old_facility_owner_type)
+        # except OwnerType.DoesNotExist:
+        #     old_facility_owner_type = "Other"
+        #     print("Old Facility Owner @ Except: "+old_facility_owner_type)
+        #
+        # try:
+        #     old_facility_keph_level = "KEPH "+str(
+        #         KephLevel.objects.values("name").get(id=self.facility.keph_level_id)["name"])
+        #     print("Old Facility KEPH Level: " + old_facility_keph_level)
+        # except KephLevel.DoesNotExist:
+        #     old_facility_keph_level = "Other"
+        #     print("Old Facility KEPH Level @ Except: "+old_facility_keph_level)
+        #
+        # '''Not get New Ones
+        # '''
+        #
+        # try:
+        #     facility_type = FacilityType.objects.values("sub_division").get(
+        #         name__exact=str(self.facility.facility_type_name))
+        #     facility_type = str(facility_type["sub_division"])
+        #     print("Facility Type: " + facility_type + "-")
+        # except FacilityType.DoesNotExist:
+        #     facility_type = {"sub_division": "Stand Alone"}
+        #     facility_type = str(facility_type["sub_division"])
+        #     print("Facility Type @ Except: " + facility_type)
+        #
+        # facility_type_details = str(self.facility.facility_type_name)
+        # if facility_type_details is None:
+        #     facility_type_details = "Some New Type"
+        # print("Facility Type Details: "+facility_type_details+"-")
+        #
+        # facility_regulatory_body = str(self.facility.regulatory_body)
+        # if facility_regulatory_body is None:
+        #     facility_regulatory_body = "Other"
+        # print("Facility Regulatory Body: " + facility_regulatory_body+"-")
+        #
+        # facility_owner = str(self.facility.owner_name)
+        # if facility_owner is None:
+        #     facility_owner = "NOT IN LIST"
+        # print("Facility Owner: " + facility_owner+"-")
+        #
+        # facility_owner_type = "Other"
+        # try:
+        #     facility_owner_type_id = str(Owner.objects.values("owner_type_id").get(name__exact=facility_owner))
+        #     facility_owner_type = str(OwnerType.objects.values("name").get(id=facility_owner_type_id))
+        # except Owner.DoesNotExist:
+        #     pass
+        #
+        # facility_keph_level = str(self.facility.keph_level)
+        # print("Facility KEPH Level: "+facility_keph_level)
+        #
+        # from common.models import OrgUnitGroupsMapping
+        # facility_type_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+        #     mfl_name__exact=facility_type)
+        # facility_type_details_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+        #     mfl_name__exact=facility_type_details)
+        # facility_regulatory_body_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+        #     mfl_name__exact=facility_regulatory_body)
+        # facility_owner_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+        #     mfl_name__exact=facility_owner)
+        # facility_owner_type_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+        #     mfl_code__exact=facility_owner_type)
+        #
+        # facility_keph_level_id = None
+        #
+        # if facility_keph_level is not None:
+        #     facility_keph_level_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+        #         mfl_name__exact="KEPH "+facility_keph_level)
+        #
+        # print("Facility Type - "+old_facility_type+" : "+facility_type)
+        # print("Facility Type Details - "+old_facility_type_details + " : " + facility_type_details)
+        # print("Facility Owner - "+old_facility_owner + " : " + facility_owner)
+        # print("Facility Owner Type - "+old_facility_owner_type + " : " + facility_owner_type)
+        # print("Facility Regulatory Body - "+old_facility_regulatory_body + " : " + facility_regulatory_body)
+        # print("Facility KEPH Level - "+old_facility_keph_level + " : " + facility_keph_level)
+
+        # print(facility_type_dhis_id["dhis_id"])
+
+        # org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
+        #
+        # self.dhis2_api_auth.add_org_unit_to_group(facility_type_dhis_id["dhis_id"], org_unit_id)
+        # print("Assigned Group Facility Type")
+        #
+        # self.dhis2_api_auth.add_org_unit_to_group(facility_type_details_dhis_id["dhis_id"], org_unit_id)
+        # print("Assigned Group Facility Type Details")
+        #
+        # self.dhis2_api_auth.add_org_unit_to_group(facility_regulatory_body_dhis_id["dhis_id"], org_unit_id)
+        # print("Assigned Group Facility Regulatory Body")
+        #
+        # self.dhis2_api_auth.add_org_unit_to_group(facility_owner_dhis_id["dhis_id"], org_unit_id)
+        # print("Assigned Group Facility Owner")
+        #
+        # self.dhis2_api_auth.add_org_unit_to_group(facility_owner_type_dhis_id["dhis_id"], org_unit_id)
+        # print("Assigned Group Facility owner Type")
+        #
+        # if facility_keph_level_id is not None:
+        #     self.dhis2_api_auth.add_org_unit_to_group(facility_keph_level_id["dhis_id"], org_unit_id)
+
         new_facility_updates_payload["code"] = str(self.facility.code)
         new_facility_updates_payload["name"] = str(self.facility.name)
         new_facility_updates_payload["shortName"] = str(self.facility.name)
@@ -1661,7 +1801,7 @@ class FacilityUpdates(AbstractBase):
                 else:
                     value = field_changed.get("actual_value")
                 setattr(self.facility, field_name, value)
-            self.facility.save(allow_save=True)
+            # self.facility.save(allow_save=True)
             print("Hellow! MFL!")
             self.push_facility_updates()
             '''TODO
@@ -1935,7 +2075,7 @@ class FacilityApproval(AbstractBase):
         else:
             self.facility.rejected = False
             self.facility.approved = True
-            # self.push_new_facility()
+            self.push_new_facility()
             self.assign_org_unit_groups()
             self.facility.is_published = True
         self.facility.save(allow_save=True)
@@ -1964,13 +2104,29 @@ class FacilityApproval(AbstractBase):
             print("Facility Type @ Except: " + facility_type)
 
         facility_type_details = str(self.facility.facility_type_name)
+        if facility_type_details is None:
+            facility_type_details = "Some New Type"
         print("Facility Type Details: "+facility_type_details+"-")
 
         facility_regulatory_body = str(self.facility.regulatory_body)
+        if facility_regulatory_body is None:
+            facility_regulatory_body = "Other"
         print("Facility Regulatory Body: " + facility_regulatory_body+"-")
 
         facility_owner = str(self.facility.owner_name)
+        if facility_owner is None:
+            facility_owner = "NOT IN LIST"
         print("Facility Owner: " + facility_owner+"-")
+
+        facility_owner_type = "Other"
+        try:
+            facility_owner_type_id = str(Owner.objects.values("owner_type_id").get(name__exact=facility_owner))
+            facility_owner_type = str(OwnerType.objects.values("name").get(id=facility_owner_type_id))
+        except Owner.DoesNotExist:
+            pass
+
+        facility_keph_level = str(self.facility.keph_level)
+        print("Facility KEPH Level: "+facility_keph_level)
 
         from common.models import OrgUnitGroupsMapping
         facility_type_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
@@ -1981,6 +2137,14 @@ class FacilityApproval(AbstractBase):
             mfl_name__exact=facility_regulatory_body)
         facility_owner_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
             mfl_name__exact=facility_owner)
+        facility_owner_type_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+            mfl_code__exact=facility_owner_type)
+
+        facility_keph_level_id = None
+
+        if facility_keph_level is not None:
+            facility_keph_level_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
+                mfl_name__exact="KEPH "+facility_keph_level)
 
         # print(facility_type_dhis_id["dhis_id"])
 
@@ -1997,6 +2161,12 @@ class FacilityApproval(AbstractBase):
 
         self.dhis2_api_auth.add_org_unit_to_group(facility_owner_dhis_id["dhis_id"], org_unit_id)
         print("Assigned Group Facility Owner")
+
+        self.dhis2_api_auth.add_org_unit_to_group(facility_owner_type_dhis_id["dhis_id"], org_unit_id)
+        print("Assigned Group Facility owner Type")
+
+        if facility_keph_level_id is not None:
+            self.dhis2_api_auth.add_org_unit_to_group(facility_keph_level_id["dhis_id"], org_unit_id)
 
     def push_new_facility(self):
         from mfl_gis.models import FacilityCoordinates

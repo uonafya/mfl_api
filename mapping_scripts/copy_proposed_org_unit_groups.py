@@ -2,6 +2,44 @@ from conn import myConnection as conn
 import datetime
 
 
+def copy_facility_keph_levels():
+    cur_select = conn.cursor()
+
+    cur_select.execute("SELECT DISTINCT ON (name) name, id FROM facilities_kephlevel")
+
+    for name, _id in cur_select.fetchall():
+        cur_insert = conn.cursor()
+        name = str(name).replace("'", "''")
+        cur_insert.execute("INSERT INTO common_orgunitgroupsmapping (mfl_name, created, updated) " +
+                           " VALUES ('" + "KEPH "+str(name) + "', '" + str(
+            datetime.datetime.now()) + "', '" + str(datetime.datetime.now()) + "')")
+        print ("Inserted KEPH Level - " + str(name))
+        # print(str(cur_insert), str(cur_select))
+        conn.commit()
+        cur_insert.close()
+
+    cur_select.close()
+
+
+def copy_facility_owners():
+    cur_select = conn.cursor()
+
+    cur_select.execute("SELECT DISTINCT ON (name) name, id FROM facilities_owner")
+
+    for name, _id in cur_select.fetchall():
+        cur_insert = conn.cursor()
+        name = str(name).replace("'", "''")
+        cur_insert.execute("INSERT INTO common_orgunitgroupsmapping (mfl_name, created, updated) " +
+                           " VALUES ('" + str(name) + "', '" + str(
+            datetime.datetime.now()) + "', '" + str(datetime.datetime.now()) + "')")
+        print ("Inserted Facility Owner - " + str(name))
+        # print(str(cur_insert), str(cur_select))
+        conn.commit()
+        cur_insert.close()
+
+    cur_select.close()
+
+
 def copy_facility_owner_type():
     cur_select = conn.cursor()
 
@@ -82,3 +120,5 @@ def copy_facility_type_details():
 # copy_facility_regulating_body()
 # copy_facility_type()
 # copy_facility_type_details()
+copy_facility_owners()
+copy_facility_keph_levels()
