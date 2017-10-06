@@ -26,6 +26,7 @@ def get_org_unit_ids(name, level=2, filter='eq'):
     # print("Get Org Unit ID Response", r.json())
     print("Raw Response: "+str(r.json()))
     print(r.url)
+    print(str(r.status_code))
 
     if len (r.json()['organisationUnits']) < 1:
         return False
@@ -255,18 +256,17 @@ Update the Wards
 
 def update_wards (conn):
     fetch_cur = conn.cursor()
-    fetch_cur.execute ("SELECT id, mfl_name, mfl_code FROM common_wardmapping ORDER BY mfl_name ASC")
+    fetch_cur.execute ("SELECT id, mfl_name, mfl_code FROM common_wardmapping WHERE dhis_name IS NULL AND mfl_name > 'MUKOGONDO WEST' ORDER BY mfl_name ASC")
+    # fetch_cur.execute("SELECT id, mfl_name, mfl_code FROM common_wardmapping WHERE id =  '1465' ")
     print ("We have {} Wards in MFL".format(str(fetch_cur.rowcount)))
-    ignored, found = 0, 0
+    ignored = 0
 
     for id, name, code in fetch_cur.fetchall():
         name = str(name).lower() + " Ward"
         name = name.title()
 
         r = get_org_unit_ids(name, 4, "eq")
-        if not r:
-            ignored += 1
-        else :
+        if r:
             cur_update = conn.cursor()
             query = "UPDATE common_wardmapping SET dhis_name = '" + str(
                 r["dhis_name"].replace ("'", "''")) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
@@ -275,17 +275,16 @@ def update_wards (conn):
             conn.commit()
             print ("Updating " + name)
 
-            found += 1
-
-    print (found, ignored)
+    print ("Ignored " + str (ignored))
 
 # correct_county_names(myConnection)
 # update_counties(myConnection)
-update_subcounties(myConnection)
+# update_subcounties(myConnection)
 # correct_subcounties(myConnection)
 '''
 At this Point, stop and clean the subcounties in the ignored_2.json (better to fetch from the table where dhis_name IS NULL
 '''
 # clean_mfl_subcounties(myConnection)
-# update_wards(myConnection)
+update_wards(myConnection)
+
 

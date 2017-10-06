@@ -33,7 +33,7 @@ def get_org_unit_group_ids(payload):
     }
 
 
-def update_counties(conn):
+def update_groups(conn):
 
     cur_select = conn.cursor()
 
@@ -59,5 +59,5 @@ def update_counties(conn):
     print("Done.")
 
 
-update_counties(conn)
+update_groups(conn)
 

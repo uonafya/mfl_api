@@ -18,7 +18,7 @@ def weka(payload):
 
 
 def sahihisha(jina):
-    return str(jina).strip().replace("  ", " ")
+    return str(jina).strip().replace("  ", " ").title()
 
 
 r = requests.get(
@@ -29,7 +29,7 @@ r = requests.get(
         },
         params={
             "paging": "false",
-            "level" : 3,
+            "level" : 4,
             "fields" : '[*]'
         }
     )
