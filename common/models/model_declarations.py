@@ -327,6 +327,21 @@ class WardMapping(AbstractBaseMapping):
 
 @reversion.register
 @encoding.python_2_unicode_compatible
+class FacilityMapping(AbstractBaseMapping):
+
+    facility_id = models.CharField(max_length=255, null=True)
+    ward_name = models.CharField(max_length=255, null=True)
+    test = models.CharField(max_length=255, null=True)
+
+    def __str__(self):
+        return self.mfl_name
+
+    class Meta(AdministrativeUnitBase.Meta):
+        verbose_name_plural = 'facility_mappings'
+
+
+@reversion.register
+@encoding.python_2_unicode_compatible
 class OrgUnitGroupsMapping(AbstractBaseMapping):
 
     group_set_ids = models.TextField(null=True, blank=True)

@@ -4,13 +4,15 @@ import requests
 import base64
 import json
 
+
 from conn import myConnection
 
 url = "http://localhost:8080/api/organisationUnits/"
 cred = base64.b64encode("admin:district")
 
 
-def get_org_unit_ids(name, level=2, filter='eq'):
+def get_org_unit_ids(name, level=2, filter='eq', ward_name = ""):
+    print ("Mapping " + name + " :: " + ward_name)
     r = requests.get(
         url,
         headers={
@@ -24,19 +26,41 @@ def get_org_unit_ids(name, level=2, filter='eq'):
         }
     )
     # print("Get Org Unit ID Response", r.json())
-    print("Raw Response: "+str(r.json()))
-    print(r.url)
-    print(str(r.status_code))
+    # print("Raw Response: "+str(r.json()))
+    # print(r.url)
+    # print(str(r.status_code))
 
-    if len (r.json()['organisationUnits']) < 1:
+    res = r.json()['organisationUnits']
+
+    if len (res) < 1:
         return False
+
     else:
-        response = {
-            "dhis_name": str(r.json()["organisationUnits"][0]["name"]),
-            "dhis_id": str(r.json()["organisationUnits"][0]["id"]),
-            "dhis_parent" : str (r.json()['organisationUnits'][0]['parent']['id'])
-        }
-        return response
+        if len(res) == 1:
+            response = {
+                "dhis_name": str(res[0]["name"]),
+                "dhis_id": str(res[0]["id"]),
+                "dhis_parent" : str (res[0]['parent']['id'])
+            }
+            return response
+        else:
+            choices = [False] + res
+            for i in range (1, len (choices)):
+                print ("{} :: uid = {}\tparent = {}\tname = {}\n " .format (str(i), choices[i]['id'], choices[i]['parent']['id'], choices[i]['name']))
+            while True:
+                try:
+                    choice = int(input ("Choice (0 to Ignore) : "))
+                    break
+                except SyntaxError:
+                    print ("Wrong Choice")
+            if choice < 1 or choice > len (choices):
+                return False
+            else:
+                return {
+                    "dhis_name": str(choices[choice]["name"]),
+                    "dhis_id": str(choices[choice]["id"]),
+                    "dhis_parent": str(choices[choice]['parent']['id'])
+                }
 # HfVjCurKxh2
 
 # correct the county names
@@ -277,6 +301,42 @@ def update_wards (conn):
 
     print ("Ignored " + str (ignored))
 
+
+def update_facility(conn):
+    fetch_cur = conn.cursor()
+    fetch_cur.execute ("SELECT id, mfl_name, mfl_code, ward_name FROM common_facilitymapping WHERE dhis_name IS NULL ORDER BY mfl_name ASC")
+    # fetch_cur.execute("SELECT id, mfl_name, mfl_code, ward_name FROM common_wardmapping WHERE id =  '1465' ")
+    print ("We have {} Pending Facilities in MFL\n".format(str(fetch_cur.rowcount)))
+    ignored, corrected = 0, 0
+    total = float(fetch_cur.rowcount)
+    done = 1
+
+    for id, name, code, ward_name in fetch_cur.fetchall():
+        name = str(name).lower()
+        name = name.title()
+
+        r = get_org_unit_ids(name, 5, "ilike", ward_name)
+        if r:
+
+            cur_update = conn.cursor()
+            query = "UPDATE common_facilitymapping SET dhis_name = '" + str(
+                r["dhis_name"].replace ("'", "''")) + "', dhis_id = '" + str(r['dhis_id']) + "', dhis_parent_id = '" + str(
+                r['dhis_parent']) + "'  WHERE id = '" + str(id) + "'"
+            cur_update.execute (query)
+            conn.commit()
+            print ("Updating " + name + "\n\n")
+            corrected += 1
+            print ("Updated " + name + "\n")
+        else:
+            ignored += 1
+            print ("Skipping " + name + "\n")
+
+        perc = (float(done)/total)*100
+        print ("..... {}% Done". format(str(perc)))
+        done += 1
+
+    print ("Corrected {} :: Ignored {}" .format (str(corrected), str(ignored)))
+
 # correct_county_names(myConnection)
 # update_counties(myConnection)
 # update_subcounties(myConnection)
@@ -285,6 +345,9 @@ def update_wards (conn):
 At this Point, stop and clean the subcounties in the ignored_2.json (better to fetch from the table where dhis_name IS NULL
 '''
 # clean_mfl_subcounties(myConnection)
-update_wards(myConnection)
+# update_wards(myConnection)
+update_facility(myConnection)
+
+
 
 

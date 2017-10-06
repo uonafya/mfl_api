@@ -80,8 +80,28 @@ def copy_wards(conn):
     cur_select.close()
 
 
-copy_counties(myConnection)
-copy_sub_counties(myConnection)
-copy_constituencies(myConnection)
-copy_wards(myConnection)
+def copy_facilities(conn):
+    cur_select = conn.cursor()
+
+    cur_select.execute("SELECT DISTINCT ON (LOWER(cs.name), cs.ward_id) cs.id AS id, cs.name AS name, cs.code AS code, cc.name AS ward_name FROM facilities_facility AS cs INNER JOIN common_ward AS cc ON cs.ward_id = cc.id")
+
+    for _id, name, code, ward_name in cur_select.fetchall():
+        cur_insert = conn.cursor()
+        name = str(name).replace("'", "''")
+        ward_name = str(ward_name).replace("'", "''")
+        cur_insert.execute("INSERT INTO common_facilitymapping (facility_id, mfl_name, mfl_code, ward_name, created, updated) "+
+                           " VALUES ('"+str(_id)+"', '"+str(name)+"',"+str(code)+", '"+str(ward_name)+"', '"+str(datetime.datetime.now())+"', '"+str(datetime.datetime.now())+"')")
+        print ("Inserted Facility - "+name)
+        # print(str(cur_insert), str(cur_select))
+        conn.commit()
+        cur_insert.close()
+
+    cur_select.close()
+
+
+# copy_counties(myConnection)
+# copy_sub_counties(myConnection)
+# copy_constituencies(myConnection)
+# copy_wards(myConnection)
+copy_facilities(myConnection)
 myConnection.close()
