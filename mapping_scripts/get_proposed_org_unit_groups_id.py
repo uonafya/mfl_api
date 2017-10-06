@@ -33,8 +33,7 @@ def get_org_unit_group_ids(payload):
     }
 
 
-def update_org_unit_mappings(conn):
-
+def update_groups(conn):
     cur_select = conn.cursor()
 
     cur_select.execute("SELECT id, mfl_name FROM common_orgunitgroupsmapping")
@@ -59,5 +58,6 @@ def update_org_unit_mappings(conn):
     print("Done.")
 
 
-update_org_unit_mappings(conn)
+
+update_groups(conn)
 

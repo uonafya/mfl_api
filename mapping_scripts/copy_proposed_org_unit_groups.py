@@ -116,9 +116,7 @@ def copy_facility_type_details():
     cur_select.close()
 
 
-# copy_facility_owner_type()
-# copy_facility_regulating_body()
-# copy_facility_type()
-# copy_facility_type_details()
-copy_facility_owners()
-copy_facility_keph_levels()
+copy_facility_owner_type()
+copy_facility_regulating_body()
+copy_facility_type()
+copy_facility_type_details()
