@@ -2120,8 +2120,8 @@ class FacilityApproval(AbstractBase):
 
         facility_owner_type = "Other"
         try:
-            facility_owner_type_id = str(Owner.objects.values("owner_type_id").get(name__exact=facility_owner))
-            facility_owner_type = str(OwnerType.objects.values("name").get(id=facility_owner_type_id))
+            facility_owner_type_id = str(Owner.objects.values("owner_type_id").get(name__exact=facility_owner)["owner_type_id"])
+            facility_owner_type = str(OwnerType.objects.values("name").get(id=facility_owner_type_id)["name"])
         except Owner.DoesNotExist:
             pass
 
