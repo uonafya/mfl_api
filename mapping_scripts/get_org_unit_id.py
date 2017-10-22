@@ -23,6 +23,7 @@ def get_org_unit_ids(name, level=2, filter='eq', ward_name = ""):
             "filter": "name:"+filter+":"+name,
             "fields": "[name,id,parent]",
             "paging": "false",
+            "level":level
         }
     )
     # print("Get Org Unit ID Response", r.json())
@@ -31,44 +32,37 @@ def get_org_unit_ids(name, level=2, filter='eq', ward_name = ""):
     # print(str(r.status_code))
 
     res = r.json()['organisationUnits']
+
     if len (res) < 1:
         return False
-    else :
-        return {
-            "dhis_name": str(res[0]["name"]),
-            "dhis_id": str(res[0]["id"]),
-            "dhis_parent": str(res[0]['parent']['id'])
-            }
 
-    # if len (res) < 1:
-    #     return False
-    #
-    # else:
-    #     if len(res) == 1:
-    #         response = {
-    #             "dhis_name": str(res[0]["name"]),
-    #             "dhis_id": str(res[0]["id"]),
-    #             "dhis_parent" : str (res[0]['parent']['id'])
-    #         }
-    #         return response
-    #     else:
-    #         choices = [False] + res
-    #         for i in range (1, len (choices)):
-    #             print ("{} :: uid = {}\tparent = {}\tname = {}\n " .format (str(i), choices[i]['id'], choices[i]['parent']['id'], choices[i]['name']))
-    #         while True:
-    #             try:
-    #                 choice = int(input ("Choice (0 to Ignore) : "))
-    #                 break
-    #             except SyntaxError:
-    #                 print ("Wrong Choice")
-    #         if choice < 1 or choice > len (choices):
-    #             return False
-    #         else:
-    #             return {
-    #                 "dhis_name": str(choices[choice]["name"]),
-    #                 "dhis_id": str(choices[choice]["id"]),
-    #                 "dhis_parent": str(choices[choice]['parent']['id'])
-    #             }
+    else:
+        if len(res) == 1:
+            response = {
+                "dhis_name": str(res[0]["name"]),
+                "dhis_id": str(res[0]["id"]),
+                "dhis_parent" : str (res[0]['parent']['id'])
+            }
+            return response
+        else:
+            choices = [False] + res
+            for i in range (1, len (choices)):
+                print ("{} :: uid = {}\tparent = {}\tname = {}\n " .format (str(i), choices[i]['id'], choices[i]['parent']['id'], choices[i]['name']))
+
+            while True:
+                try:
+                    choice = int(input ("Choice (0 to Ignore) : "))
+                    break
+                except SyntaxError:
+                    print ("Wrong Choice")
+            if choice < 1 or choice > len (choices):
+                return False
+            else:
+                return {
+                    "dhis_name": str(choices[choice]["name"]),
+                    "dhis_id": str(choices[choice]["id"]),
+                    "dhis_parent": str(choices[choice]['parent']['id'])
+                }
 # HfVjCurKxh2
 
 # correct the county names
@@ -322,8 +316,9 @@ def update_facility(conn):
     for id, name, code, ward_name in fetch_cur.fetchall():
         name = str(name).lower()
         name = name.title()
+        name = name.split (" ")[0]
 
-        r = get_org_unit_ids(name, 5, "ilike", ward_name)
+        r = get_org_unit_ids(name, 6, "ilike", ward_name)
         if r:
 
             cur_update = conn.cursor()

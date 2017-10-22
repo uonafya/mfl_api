@@ -4,7 +4,7 @@ import json
 
 from conn import myConnection as conn
 
-url = "http://test.hiskenya.org/api/25/organisationUnitGroups"
+url = "http://test.hiskenya.org/dev/api/organisationUnitGroups"
 cred = base64.b64encode("healthit:hEALTHIT2017")
 
 

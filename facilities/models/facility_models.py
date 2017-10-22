@@ -1359,9 +1359,9 @@ class DhisAuth(ApiAuthentication):
         r = requests.get(
             self.server + "api/organisationUnits.json",
             headers={
-                # "Authorization": "Bearer " +
-                #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                #                             .replace("'", '"'))["access_token"],
+                "Authorization": "Bearer " +
+                                 json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                                            .replace("'", '"'))["access_token"],
                 "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
@@ -2138,7 +2138,7 @@ class FacilityApproval(AbstractBase):
         facility_owner_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
             mfl_name__exact=facility_owner)
         facility_owner_type_dhis_id = OrgUnitGroupsMapping.objects.values("dhis_id").get(
-            mfl_code__exact=facility_owner_type)
+            mfl_name__exact=facility_owner_type)
 
         facility_keph_level_id = None
 
