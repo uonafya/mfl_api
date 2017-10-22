@@ -421,4 +421,4 @@ def Dhis2Auth.refresh_oauth2_token(self)
 
 #### b. New facility push
 - I know. What's a new facility push. Well, once a new facility is added into MFL, it is usually given a status `Pending Approval`. Now, once this facility is approved, the integration we've made enables MFL to create this new facility in DHIS2 automatically, as a new Organisation Unit.
-- To achieve this, we use the DHIS2 Web API. We created.
+- To achieve this, we use the function .
