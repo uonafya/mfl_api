@@ -1399,7 +1399,7 @@ class DhisAuth(ApiAuthentication):
         else:
             raise ValidationError(
                 {
-                    "Error!": ["Unable to get corresponding faciity in DHIS2"]
+                    "Error!": ["Unable to get corresponding facility in DHIS2"]
                 }
             )
 
@@ -1452,8 +1452,8 @@ class DhisAuth(ApiAuthentication):
         if r.json()["status"] != "OK":
             raise ValidationError(
                 {
-                    "Error!": ["An error occured while pushing facility to DHIS2. This is may be caused by the "
-                               "existance of an organisation unit with as similar name as to the one you are creating. "
+                    "Error!": ["An error occurred while pushing facility to DHIS2. This is may be caused by the "
+                               "existence of an organisation unit with as similar name as to the one you are creating. "
                                "Or some specific information like geo-coordinates are not unique"]
                 }
             )

@@ -1,5 +1,21 @@
 # DHIS2 - KMHFL Integration v0.1
 
+## Contents
+- [DHIS2 - KMHFL Integration v0.1](#dhis2---kmhfl-integration-v01)
+  * [DHIS2](#dhis2)
+  * [MFL API](#mfl-api)
+    + [Disclaimer!](#disclaimer-)
+    + [I. Lets get the source code](#i-lets-get-the-source-code)
+      - [NB* _The source code is already updated with the integration modules. We'll be going through the sections of the original code that was edited to effect the integration_.](#nb---the-source-code-is-already-updated-with-the-integration-modules-we-ll-be-going-through-the-sections-of-the-original-code-that-was-edited-to-effect-the-integration-)
+    + [II. Setting up the database](#ii-setting-up-the-database)
+    + [III. What has changed in the source code?](#iii-what-has-changed-in-the-source-code-)
+      - [a. Some bit of introduction and ground breaking](#a-some-bit-of-introduction-and-ground-breaking)
+      - [b. New facility push](#b-new-facility-push)
+      - [c. Organisation group assignment to new facility](#c-organisation-group-assignment-to-new-facility)
+      - [d. Facility update push](#d-facility-update-push)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
 ## DHIS2
 - Not much needs to be done on this side. All you need to know is how to use the [dhis2 Web API v2.26](https://docs.dhis2.org/2.26/en/developer/html/dhis2_developer_manual_full.html#webapi "dhis2 Web API"). This will enable you to understand and maybe improve on the code that we shall see later im the MFL API section.
 - You might also need **super user** credentials to __*dhis2*__ so that you can update the ones we have, if need be.
@@ -29,7 +45,7 @@ Taking note of the `*`, we know that we are currently at branch `master`. We nee
 
 ### II. Setting up the database
 - Assuming you are familiar with Django and the MVC framework's migrations, you might notice that the migrations are included in the repository. This is not a good practice but when we got the source code, they were being included in the repository. We'll correct the issue soon.
-- Next, you should be having a `.bak` or `.sql` backup of the mfl database. It's name should have a `integration_v0.1` somewhere within it's name. This has the general structure of the schema together with setup data and possibly some data already preloaded. Hopefully you successfully imported this and is now in a database called `mfl`.
+- Next, you should be having a `.bak` or `.sql` backup of the mfl database. It's name should have a `integration_v0.1` somewhere within it's name. This has the general structure of the schema together with setup data and possibly some data already pre-loaded. Hopefully you successfully imported this and is now in a database called `mfl`.
 - Now, `cd` into the project folder. make sure your virtual environment is active and that you have all the packages necessary. To verify this, once in the project folder, do 
 ```bash
 :bash-$(mfl_api_venv) pip install -r requirements.txt
@@ -95,7 +111,7 @@ mfl_api/
 156 directories, 1136 files
 # Reducted due to the size of the dir tree. Focuses on the important files and directories
 ```
-#### a. Some bit of intoduction and ground breaking
+#### a. Some bit of introduction and ground breaking
 - Most of the core integration logic is located in a `class` called `DhisAuth(ApiAuthentication)` in `$PROJECT_DIR(mfl_api)/facilities/facility_models.py`
 - It's implementation is outlined below. Take note of its member functions since I will be referring to them as we explore other classes and functions.
 
@@ -233,7 +249,7 @@ class DhisAuth(ApiAuthentication):
         else:
             raise ValidationError(
                 {
-                    "Error!": ["Unable to get corresponding faciity in DHIS2"]
+                    "Error!": ["Unable to get corresponding facility in DHIS2"]
                 }
             )
 
@@ -286,8 +302,8 @@ class DhisAuth(ApiAuthentication):
         if r.json()["status"] != "OK":
             raise ValidationError(
                 {
-                    "Error!": ["An error occured while pushing facility to DHIS2. This is may be caused by the "
-                               "existance of an organisation unit with as similar name as to the one you are creating. "
+                    "Error!": ["An error occurred while pushing facility to DHIS2. This is may be caused by the "
+                               "existence of an organisation unit with as similar name as to the one you are creating. "
                                "Or some specific information like geo-coordinates are not unique"]
                 }
             )
@@ -359,7 +375,7 @@ class DhisAuth(ApiAuthentication):
 ...
 ```
 
-- I know. A lot to take in. But I had to put it there. Just as a reference guide so that whenever I say `def DhisAuth.add_org_unit_to_group(self)` (meaning, function add_org_unit_to_group(self) in DhisAuth class), we are on the same page.
+- I know. A lot to take in. But I had to put it there. Just as a reference guide so that whenever I say `def add_org_unit_to_group(self)` (meaning, function add_org_unit_to_group(self) in DhisAuth class), we are on the same page.
 
 **Authentication**
 
@@ -382,7 +398,7 @@ Indexes:
 Referenced by:
     TABLE "facilities_dhisauth" CONSTRAINT "D45ec29ca05d27761a7ce71acd14107e" FOREIGN KEY (apiauthentication_ptr_id) REFERENCES common_apiauthentication(id) DEFERRABLE INITIALLY DEFERRED
 ```
-- This table contains the neccessary credentials and details to make both `Basic` and `OAuth2` authentication using the DHIS2 Web API. We have both implementations but currently using basic auth. The OAuth2 is included. But commented out.
+- This table contains the necessary credentials and details to make both `Basic` and `OAuth2` authentication using the DHIS2 Web API. We have both implementations but currently using basic auth. The OAuth2 is included. But commented out.
 
 - You can find this in `$PROJECT_DIR(mfl_api)/facilities/facility_models.py`
 ```python
@@ -411,14 +427,125 @@ r = requests.get(
 ```
 
 **OAuth 2 Token Refresh**
-- When using OAuth 2, there is an aspect of the `token expiry` where an access you were given by the API has a certain period to live. To deal with this, we have put in place a function that refreshes this token and automatically updates the `access token` field in the database with the newly recieved token.
+- When using OAuth 2, there is an aspect of the `token expiry` where an access you were given by the API has a certain period to live. To deal with this, we have put in place a function that refreshes this token and automatically updates the `access token` field in the database with the newly received token.
 - You can find this in `$PROJECT_DIR(mfl_api)/facilities/facility_models.py`
 ```python
 #! $DIR/facility_models.py
+# Lne ~1319
+
 @set_interval(30.0)
 def Dhis2Auth.refresh_oauth2_token(self)
 ```
 
 #### b. New facility push
 - I know. What's a new facility push. Well, once a new facility is added into MFL, it is usually given a status `Pending Approval`. Now, once this facility is approved, the integration we've made enables MFL to create this new facility in DHIS2 automatically, as a new Organisation Unit.
-- To achieve this, we use the function .
+- To achieve this, we use the function:
+```python
+#! $DIR/facility_models.py
+# Line ~1438
+...
+def push_facility_to_dhis2(self, new_facility_payload):
+    ...
+...
+```
+- As outlined, the function expects a json payload containing the new facility's details. A sample is as shown below:
+##### New facility push json payload
+```json
+{  
+   code:"14180",
+   name:"10 Engineer VCT",
+   shortName:"10 Engineer VCT",
+   displayName:"10 Engineer VCT",
+   displayShortName:"10 Engineer VCT",
+   openingDate:"1970-01-01T00:00:00.000",
+   coordinates:"[37.094,-0.00133]",
+   parent:{  
+      id:"DpYpJ6E1vRc"
+   },
+   access:{  
+      read:true,
+      update:true,
+      externalize:true,
+      delete:true,
+      write:true,
+      manage:true
+   },
+   children:[],
+   translations:[],
+   ancestors:[  
+      {  
+         id:"HfVjCurKxh2"
+      },
+      ...
+   ],
+   organisationUnitGroups:[  
+      {  
+         id:"ZwPu4GoLJtA"
+      },
+      ...
+   ],
+   userGroupAccesses:[],
+   attributeValues:[],
+   users:[],
+   userAccesses:[],
+   dataSets:[  
+      {  
+         id:"obUj8fCPghC"
+      },
+      ...
+   ],
+   legendSets:[],
+   programs:[  
+      {  
+         id:"j6EGTLAIMQ3"
+      },
+      ...
+   ]
+}
+```
+
+#### c. Organisation group assignment to new facility
+- Once the new facility has been pushed (created) to *dhis2*, we need to add it to its respective organisation unit group(s). Refer to the [Mapping Docs](http://not-a-real-link/repo.git "Mapping Documentation") for the how various organisation unit groups from *dhis2* have been mapped and referenced in *MFL*.
+- To do this, 
+    * we have to know which organisation unit groups the new facility belongs. This can easily be done through `querying the local MFL database`.
+    * next, using the mapping tables, `retrieve` the mapped organisation unit groups `dhis2 uids`. Then, make the function call below. This will return the **uid** of the just pushed facility:
+    ##### get facility uid
+    ```python
+    #! $DIR/facility_models.py
+    # Line ~1358
+    ...
+    def get_org_unit_id(self, code):
+    ...
+    ```
+    This function expects the mfl_code of the facility in subject.
+    <br />
+    <br />
+    * once the uids are obtained, you need to make the following function call, providing the **Organisation unit group uid** and **Organisation unit (Facility) uid** respectively.
+
+    ```python
+    #! $DIR/facility_models.py
+    # Line ~1483
+    ...
+    def add_org_unit_to_group(self, org_unit_group_id, org_unit_id):
+    ...
+    ```
+
+#### d. Facility update push
+- Yes, once the updates made to a facility are approved, the changes are replicated on *dhis2* automatically.
+- To effect this, make the function calls below. The second one `def push_facility_updates_to_dhis2()` takes the uid organisation unit to be updated together with the facility update payload. In json. Recall the [payload for new facility push](#new-facility-push-json-payload)? well, this one is identical to it. The the [organisation unit uid](#get-facility-uid) can be gotten using the first function call below. We've covered this before too.
+
+```python
+#! $DIR/facility_models.py
+# Line ~1358
+...
+def get_org_unit_id(self, code):
+    ...
+...
+
+#! $DIR/facility_models.py
+# Line ~1461
+...
+def push_facility_updates_to_dhis2(self, org_unit_id, facility_updates_payload):
+    ...
+...
+```
