@@ -552,4 +552,4 @@ def push_facility_updates_to_dhis2(self, org_unit_id, facility_updates_payload):
 
 <small><i>Integration walk-through by <a href='http://derekprince.bitbucket.io/'>Derek Prince</a>, <a href='https://healthit.uonbi.ac.ke/'>Health IT</a> <a href='http://uonbi.ac.ke/'>(University of Nairobi)</a></i></small>
 
-<img style="width: 80px; margin-top: -20px; margin-bottom: -10px" src="assets/UoN-Logo.png">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img style="width: 100px; margin-top: -15px; margin-bottom: -15px" src="assets/uonafya.png">
+<a href='http://uonbi.ac.ke/'><img style="width: 80px; margin-top: -20px; margin-bottom: -10px" src="assets/UoN-Logo.png" /></a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='https://healthit.uonbi.ac.ke/'><img style="width: 100px; margin-top: -15px; margin-bottom: -15px" src="assets/uonafya.png" width="100" /></a>
