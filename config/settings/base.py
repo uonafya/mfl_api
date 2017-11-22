@@ -8,7 +8,7 @@ BASE_DIR = os.path.dirname(
 
 env = environ.Env(
     DATABASE_URL=(str, 'postgres://mfl:mfl@localhost:5432/mfl'),
-    DEBUG=(bool, True),
+    DEBUG=(bool, False),
     FRONTEND_URL=(str, "http://localhost:8062"),
     REALTIME_INDEX=(bool, False),
     HTTPS_ENABLED=(bool, False),
@@ -69,7 +69,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_SUBJECT_PREFIX = '[Master Facility List] '
 
-ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',') + ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = env('ALLOWED_HOSTS').split(',') + ['localhost', '127.0.0.1', '0.0.0.0', '41.89.94.4']
 
 INSTALLED_APPS = (
     'django.contrib.sites',
