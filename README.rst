@@ -28,6 +28,7 @@ This is the API server for the second generation Kenyan Ministry of Health Maste
 
 The "home" of the canonical / production version is at http://ehealth.or.ke/facilities/ . The latest documentation can always be found at http://mfl-api-docs.readthedocs.org/en/latest/ . That includes installation instructions, guidance for contributors and API documentation.
 
+# Quick Dev Setup & Installation Guide
 
 Credits
 --------
