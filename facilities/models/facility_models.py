@@ -1327,7 +1327,8 @@ class DhisAuth(ApiAuthentication):
                 "grant_type": "refresh_token",
                 "refresh_token": json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
                     .replace("'", '"'))["refresh_token"]
-            }
+            },
+            verify=True
         )
 
         response = str(r.json())
@@ -1346,22 +1347,23 @@ class DhisAuth(ApiAuthentication):
                 "grant_type": "password",
                 "username": self.username,
                 "password": self.password
-            }
+            },
+            verify=True
         )
 
         response = str(r.json())
         # print("Response @ get_oauth2 ", response, r.url, r.status_code)
         self.session_store[self.oauth2_token_variable_name] = response
         self.session_store.save()
-        self.refresh_oauth2_token()
+        # self.refresh_oauth2_token()
 
     def get_org_unit_id(self, code):
         r = requests.get(
             self.server + "api/organisationUnits.json",
             headers={
-                "Authorization": "Bearer " +
-                                 json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                                            .replace("'", '"'))["access_token"],
+                # "Authorization": "Bearer " +
+                #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+                #                             .replace("'", '"'))["access_token"],
                 "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
@@ -1369,7 +1371,8 @@ class DhisAuth(ApiAuthentication):
                 "filter": "code:eq:"+str(code),
                 "fields": "[id]",
                 "paging": "false"
-            }
+            },
+            verify=True
         )
         print("Get Org Unit ID Response", r.json(), str(code))
         if len(r.json()["organisationUnits"]) is 1:
@@ -1391,7 +1394,8 @@ class DhisAuth(ApiAuthentication):
                 #                             .replace("'", '"'))["access_token"],
                 "Authorization": "Basic "+base64.b64encode(self.username+":"+self.password),
                 "Accept": "application/json"
-            }
+            },
+            verify=True
         )
         print("Get Org Unit Response", r.url, r.status_code)
         if str(r.status_code) == "200":
@@ -1417,9 +1421,10 @@ class DhisAuth(ApiAuthentication):
                 "fields": "[id,name]",
                 "filter": "level:in:[4]",
                 "paging": "false"
-            }
+            },
+            verify=True
         )
-        print(r.status_code, r.url)
+        print('@Get Parent ID',r.status_code, r.url)
         dhis2_facility_name = r.json()["organisationUnits"][0]["name"].lower()
         facility_name = str(facility_name)+ " Ward"
         facility_name = facility_name.lower()
@@ -1444,7 +1449,8 @@ class DhisAuth(ApiAuthentication):
                 "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
-            json=new_facility_payload
+            json=new_facility_payload,
+            verify=True
         )
 
         print("Create Facility Response", r.url, r.status_code, r.json())
@@ -1468,7 +1474,8 @@ class DhisAuth(ApiAuthentication):
                 "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
-            json=facility_updates_payload
+            json=facility_updates_payload,
+            verify=True
         )
 
         print("Update Facility Response", r.url, r.status_code, r.json(), "Status", r.json()["status"])
@@ -1490,11 +1497,12 @@ class DhisAuth(ApiAuthentication):
             },
             params={
                 "fields": "[*]"
-            }
+            },
+            verify=True
         )
 
         organisation_group = r_get_group.json()
-        print(organisation_group)
+        print(organisation_group, r_get_group.url)
         organisation_group["organisationUnits"].append({"id":org_unit_id})
 
         r = requests.put(
@@ -1503,7 +1511,8 @@ class DhisAuth(ApiAuthentication):
                 "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
                 "Accept": "application/json"
             },
-            json=organisation_group
+            json=organisation_group,
+            verify=True
         )
 
         if str(r.status_code) != "200":
@@ -1614,7 +1623,7 @@ class FacilityUpdates(AbstractBase):
     def push_facility_updates(self):
         from mfl_gis.models import FacilityCoordinates
         import re
-        self.dhis2_api_auth.get_oauth2_token()
+        # self.dhis2_api_auth.get_oauth2_token()
 
         dhis2_parent_id = self.dhis2_api_auth.get_parent_id(self.facility.ward_name)
         dhis2_org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
@@ -2075,7 +2084,7 @@ class FacilityApproval(AbstractBase):
         else:
             self.facility.rejected = False
             self.facility.approved = True
-            self.push_new_facility()
+            # self.push_new_facility()
             self.assign_org_unit_groups()
             self.facility.is_published = True
         self.facility.save(allow_save=True)
@@ -2124,6 +2133,7 @@ class FacilityApproval(AbstractBase):
             facility_owner_type = str(OwnerType.objects.values("name").get(id=facility_owner_type_id)["name"])
         except Owner.DoesNotExist:
             pass
+        print("Facility Owner Type: " + facility_owner_type + "-")
 
         facility_keph_level = str(self.facility.keph_level)
         print("Facility KEPH Level: "+facility_keph_level)
@@ -2150,18 +2160,23 @@ class FacilityApproval(AbstractBase):
 
         org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
 
+        print("Assigning Group Facility Type")
         self.dhis2_api_auth.add_org_unit_to_group(facility_type_dhis_id["dhis_id"], org_unit_id)
         print("Assigned Group Facility Type")
 
+        print("Assigning Group Facility Type Details")
         self.dhis2_api_auth.add_org_unit_to_group(facility_type_details_dhis_id["dhis_id"], org_unit_id)
         print("Assigned Group Facility Type Details")
 
+        print("Assigning Group Facility Regulatory Body")
         self.dhis2_api_auth.add_org_unit_to_group(facility_regulatory_body_dhis_id["dhis_id"], org_unit_id)
         print("Assigned Group Facility Regulatory Body")
 
+        print("Assigning Group Facility Owner")
         self.dhis2_api_auth.add_org_unit_to_group(facility_owner_dhis_id["dhis_id"], org_unit_id)
         print("Assigned Group Facility Owner")
 
+        print("Assigning Group Facility owner Type")
         self.dhis2_api_auth.add_org_unit_to_group(facility_owner_type_dhis_id["dhis_id"], org_unit_id)
         print("Assigned Group Facility owner Type")
 
@@ -2171,7 +2186,7 @@ class FacilityApproval(AbstractBase):
     def push_new_facility(self):
         from mfl_gis.models import FacilityCoordinates
         import re
-        self.dhis2_api_auth.get_oauth2_token()
+        # self.dhis2_api_auth.get_oauth2_token()
 
         dhis2_parent_id = self.dhis2_api_auth.get_parent_id(self.facility.ward_name)
 

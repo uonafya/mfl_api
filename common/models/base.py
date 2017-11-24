@@ -252,7 +252,7 @@ class ApiAuthentication(models.Model):
     client_id = models.CharField(max_length=255, default="101", null=False, blank=False)
     client_secret = models.CharField(max_length=255, default="873079d99-95b4-46f5-8369-9f23a3dd877", null=False,
                                      blank=False)
-    server = models.CharField(max_length=255, default="http://test.hiskenya.org/dev", null=False, blank=False)
+    server = models.CharField(max_length=255, default="https://test.hiskenya.org/dev/", null=False, blank=False)
     session_key = models.CharField(max_length=255, default="dhis2_api_12904rs", null=False, blank=False)
 
     @property
