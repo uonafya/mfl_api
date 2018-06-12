@@ -27,10 +27,11 @@ class CoordinatesValidatorMixin(object):
                 # from the border are reported as not in Kenya
                 # If higher fidelity map data is obtained, this validation
                 # can be brought back
-                LOGGER.error(
-                    '{0} is not within the Kenyan boundaries that we have'
-                    .format(self.coordinates)
-                )
+                # TODO: Uncomment this after tests (Below. The LOGGER stuff)
+                # LOGGER.error(
+                #     '{0} is not within the Kenyan boundaries that we have'
+                #     .format(self.coordinates)
+                # )
         except WorldBorder.DoesNotExist:
             raise ValidationError('Setup error: Kenyan boundaries not loaded')
 
