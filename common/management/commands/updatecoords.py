@@ -188,8 +188,8 @@ class Command(BaseCommand):
                 )
                 facility_coordinates.save()
             except ValidationError as e:
-                print(e)
-                print(e.message)
-                print(e.args)
+                self.failed_counter += 1
+                error = "{ 'error': "+str(e)+", 'error_message': "+str(e.message)+", 'error_args':"+str(e.args)+"}"
+                return error
 
             return "UPDATED ("+str(facility.code)+")"
