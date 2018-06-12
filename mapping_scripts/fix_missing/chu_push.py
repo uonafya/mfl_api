@@ -71,7 +71,7 @@ def log(stats={}):
 
 def update_chu_meta(chu_id):
     try:
-        conn = psycopg2.connect("dbname='mfl_old' user='mfl' host='localhost' password='mfl'")
+        conn = psycopg2.connect("dbname='mfl_old' user='steve' host='localhost' password='0012'")
     except:
         print "I am unable to connect to the database MFL_OLD"
 
@@ -106,11 +106,11 @@ def update_chu_meta(chu_id):
 
 def push_chu_services(chu):
     try:
-        conn = psycopg2.connect("dbname='mfl_old' user='mfl' host='localhost' password='mfl'")
+        conn = psycopg2.connect("dbname='mfl_old' user='steve' host='localhost' password='0012'")
     except:
         print "I am unable to connect to the database MFL_OLD"
     try:
-        conn2 = psycopg2.connect("dbname='mfl_new' user='mfl' host='localhost' password='mfl'")
+        conn2 = psycopg2.connect("dbname='mfl' user='steve' host='localhost' password='0012'")
     except:
         print "I am unable to connect to database MFL_NEW"
     cur = conn.cursor()
@@ -152,11 +152,11 @@ def push_chu_services(chu):
 
 def push_chu(chu_code):
     try:
-        conn = psycopg2.connect("dbname='mfl_old' user='mfl' host='localhost' password='mfl'")
+        conn = psycopg2.connect("dbname='mfl_old' user='steve' host='localhost' password='0012'")
     except:
         print "I am unable to connect to the database MFL_OLD"
     try:
-        conn2 = psycopg2.connect("dbname='mfl_new' user='mfl' host='localhost' password='mfl'")
+        conn2 = psycopg2.connect("dbname='mfl' user='steve' host='localhost' password='0012'")
     except:
         print "I am unable to connect to database MFL_NEW"
     cur = conn.cursor()
