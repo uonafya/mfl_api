@@ -126,6 +126,7 @@ class Command(BaseCommand):
                 if facility_code != 'NULL' and facility_code != 'MFL Code' and not self.nocode:
                     facility = Facility.objects.get(code=facility_code)
                     row['Status'] = self.update(facility, facility_latitude, facility_longitude)
+                    row['MFL Code'] = facility.code
                 else:
                     if self.strict:
 
@@ -163,6 +164,7 @@ class Command(BaseCommand):
                         facility = Facility.objects.get(
                             Q(name__iexact=facility_name) | Q(official_name__iexact=facility_name))
                         row['Status'] = self.update(facility, facility_latitude, facility_longitude)
+                        row['MFL Code'] = facility.code
 
             except Facility.MultipleObjectsReturned:
                 row['Status'] = 'Multiple Facilities Returned'
