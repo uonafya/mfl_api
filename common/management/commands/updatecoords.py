@@ -182,15 +182,17 @@ class Command(BaseCommand):
             return "Coordinates NOT Complete!"
         else:
             try:
-                facility_coordinates = FacilityCoordinates(
-                    facility=facility,
-                    coordinates=GEOSGeometry('POINT('+long+' '+lat+')')
-                )
+
+                facility_coordinates = FacilityCoordinates.objects.get(facility=facility)
+                facility_coordinates.coordinates = GEOSGeometry('POINT('+long+' '+lat+')')
+                # facility_coordinates = FacilityCoordinates(
+                #     facility=facility,
+                #     coordinates=GEOSGeometry('POINT('+long+' '+lat+')')
+                # )
                 facility_coordinates.save()
             except Exception as e:
                 self.failed_counter += 1
-                error = "[error: "+str(e)+" &error_message: "+str(e.message)+" & error_args:"+str(e.args)+"]"\
-                    .replace(",", " ")
+                error = "Error: "+str(e).replace(",", " ")
                 return error
 
             return "UPDATED ("+str(facility.code)+")"
