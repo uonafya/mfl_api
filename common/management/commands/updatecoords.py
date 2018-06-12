@@ -184,12 +184,13 @@ class Command(BaseCommand):
             try:
                 facility_coordinates = FacilityCoordinates(
                     facility=facility,
-                    coordinates=GEOSGeometry('POINT('+lat+' '+long+')')
+                    coordinates=GEOSGeometry('POINT('+long+' '+lat+')')
                 )
                 facility_coordinates.save()
             except Exception as e:
                 self.failed_counter += 1
-                error = "{ 'error': "+str(e)+", 'error_message': "+str(e.message)+", 'error_args':"+str(e.args)+"}"
+                error = "[error: "+str(e)+" &error_message: "+str(e.message)+" & error_args:"+str(e.args)+"]"\
+                    .replace(",", " ")
                 return error
 
             return "UPDATED ("+str(facility.code)+")"
