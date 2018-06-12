@@ -187,7 +187,7 @@ class Command(BaseCommand):
                     coordinates=GEOSGeometry('POINT('+lat+' '+long+')')
                 )
                 facility_coordinates.save()
-            except ValidationError as e:
+            except Exception as e:
                 self.failed_counter += 1
                 error = "{ 'error': "+str(e)+", 'error_message': "+str(e.message)+", 'error_args':"+str(e.args)+"}"
                 return error
