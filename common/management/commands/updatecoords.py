@@ -86,6 +86,7 @@ class Command(BaseCommand):
             if os.path.isfile(path_to_csv):
                 row_count = sum(1 for line in open(path_to_csv))
                 print('\n\nStrict Mode: ' + str(self.strict))
+                print('\n\nConsidering MFL Code: ' + str(self.nocode))
                 print('Parsing ' + path_to_csv + '. Please wait...\n\n')
                 try:
                     with open(path_to_csv, 'rb') as csvfile, temp_file:
