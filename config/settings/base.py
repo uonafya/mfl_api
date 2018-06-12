@@ -23,8 +23,6 @@ env = environ.Env(
     ADMINS=(str, "admin:admin@example.com,"),
     SERVER_EMAIL=(str, "root@localhost"),
     ALLOWED_HOSTS=(str, "localhost")
-
-
 )
 env.read_env(os.path.join(BASE_DIR, '.env'))
 
