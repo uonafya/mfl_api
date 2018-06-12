@@ -2084,7 +2084,7 @@ class FacilityApproval(AbstractBase):
         else:
             self.facility.rejected = False
             self.facility.approved = True
-            # self.push_new_facility()
+            self.push_new_facility()
             self.assign_org_unit_groups()
             self.facility.is_published = True
         self.facility.save(allow_save=True)
