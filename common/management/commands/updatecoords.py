@@ -60,11 +60,13 @@ class Command(BaseCommand):
     def __init__(self):
         super(Command, self).__init__()
         self.strict = False
+        self.nocode = False
         self.failed_counter = 0
 
     def add_arguments(self, parser):
         parser.add_argument('file', nargs='+', type=str)
         parser.add_argument('--strict', nargs='+', type=str)
+        parser.add_argument('--nocode', nargs='+', type=str)
 
     def handle(self, *args, **options):
 
@@ -72,6 +74,11 @@ class Command(BaseCommand):
             _strict = str(options['strict'][0]).lower()
             if _strict == 'y':
                 self.strict = True
+
+        if options.get('nocode', None):
+            _nocode = str(options['nocode'][0]).lower()
+            if _nocode == 'y':
+                self.nocode = True
 
         if options.get('file', None):
             path_to_csv = options['file'][0]
@@ -116,7 +123,7 @@ class Command(BaseCommand):
             row['Status'] = generate_uid()
 
             try:
-                if facility_code != 'NULL' and facility_code != 'MFL Code':
+                if facility_code != 'NULL' and facility_code != 'MFL Code' and not self.nocode:
                     facility = Facility.objects.get(code=facility_code)
                     row['Status'] = self.update(facility, facility_latitude, facility_longitude)
                 else:
@@ -150,6 +157,7 @@ class Command(BaseCommand):
                             continue
 
                         row['Status'] = self.update(facility, facility_latitude, facility_longitude)
+                        row['MFL Code'] = facility.code
 
                     else:
                         facility = Facility.objects.get(
