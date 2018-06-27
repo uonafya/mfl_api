@@ -29,8 +29,6 @@ from common.fields import SequenceField
 
 from django.contrib.sessions.backends.db import SessionStore
 import threading, requests, base64
-import urllib3
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 LOGGER = logging.getLogger(__name__)
 
