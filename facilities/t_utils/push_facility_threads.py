@@ -24,14 +24,33 @@ def generate_uid():
     return random_chars
 
 
+# class TAssignOrgUnitGroups(threading.Thread):
+#     def __init__(self, dhis2_api_auth, facility, owner, owner_type, _facility_type,
+#                  thread_name='TAssignOrgUnitGroups_' + str(generate_uid())):
+#         threading.Thread.__init__(self)
+#         self.thread_name = thread_name
+#         self.dhis2_api_auth = dhis2_api_auth
+#         self.facility = facility
+#         self.owner = owner
+#         self.owner_type = owner_type
+#         self._facility_type = _facility_type
+#
+#     def run(self):
+#         pass
+
+
 class TPushNewFacility(threading.Thread):
     def __init__(self, dhis2_api_auth, facility, facility_coordinates,
+                 owner, owner_type, _facility_type,
                  thread_name='TPushNewFacility_' + str(generate_uid())):
         threading.Thread.__init__(self)
         self.thread_name = thread_name
         self.dhis2_api_auth = dhis2_api_auth
         self.facility = facility
         self.facility_coordinates = facility_coordinates
+        self.owner = owner
+        self.owner_type = owner_type
+        self._facility_type = _facility_type
 
     def run(self):
         print("Starting THREAD " + self.thread_name + '\n')
@@ -54,23 +73,6 @@ class TPushNewFacility(threading.Thread):
 
         print("New Facility Push Payload => ", new_facility_payload)
         self.dhis2_api_auth.push_facility_to_dhis2(new_facility_payload)
-
-        print("Exiting THREAD " + self.thread_name + '\n')
-
-
-class TAssignOrgUnitGroups(threading.Thread):
-    def __init__(self, dhis2_api_auth, facility, owner, owner_type, _facility_type,
-                 thread_name='TAssignOrgUnitGroups_' + str(generate_uid())):
-        threading.Thread.__init__(self)
-        self.thread_name = thread_name
-        self.dhis2_api_auth = dhis2_api_auth
-        self.facility = facility
-        self.owner = owner
-        self.owner_type = owner_type
-        self._facility_type = _facility_type
-
-    def run(self):
-        print("Starting THREAD " + self.thread_name + '\n')
 
         try:
             facility_type = self._facility_type.objects.values("sub_division").get(
@@ -152,6 +154,8 @@ class TAssignOrgUnitGroups(threading.Thread):
 
         if facility_keph_level_id is not None:
             self.dhis2_api_auth.add_org_unit_to_group(facility_keph_level_id["dhis_id"], org_unit_id)
+
+        # TAssignOrgUnitGroups(self.dhis2_api_auth, self.facility, self.owner, self.owner_type, self._facility_type).start()
 
         print("Exiting THREAD " + self.thread_name + '\n')
 

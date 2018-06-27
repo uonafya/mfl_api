@@ -20,7 +20,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 
 from common.utilities.crypto import _decrypt
-from facilities.t_utils.push_facility_threads import TPushFacilityUpdates, TPushNewFacility, TAssignOrgUnitGroups
+from facilities.t_utils.push_facility_threads import TPushFacilityUpdates, TPushNewFacility
 from users.models import JobTitle  # NOQA
 from search.search_utils import index_instance
 from common.models import (
@@ -2104,8 +2104,7 @@ class FacilityApproval(AbstractBase):
 
             from mfl_gis.models import FacilityCoordinates
 
-            TPushNewFacility(self.dhis2_api_auth, self.facility, FacilityCoordinates).start()
-            TAssignOrgUnitGroups(self.dhis2_api_auth, self.facility, Owner, OwnerType, FacilityType).start()
+            TPushNewFacility(self.dhis2_api_auth, self.facility, FacilityCoordinates, Owner, OwnerType, FacilityType).start()
 
             self.facility.is_published = True
         self.facility.save(allow_save=True)
