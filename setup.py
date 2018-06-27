@@ -119,6 +119,7 @@ setup(
         "boto==2.38.0",
         "celery==3.1.19",
         "filechunkio==1.6",
+        "simple-crypt==4.1.7",
         "python-dateutil"
     ],
 )

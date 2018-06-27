@@ -7,6 +7,7 @@ import logging
 import re
 import datetime
 
+from celery import shared_task
 from dateutil import parser
 
 from django.conf import settings
@@ -17,7 +18,7 @@ from django.utils import encoding, timezone
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 
-
+from common.utilities.crypto import _decrypt
 from users.models import JobTitle  # NOQA
 from search.search_utils import index_instance
 from common.models import (
@@ -1288,83 +1289,90 @@ class DhisAuth(ApiAuthentication):
     type = models.CharField(max_length=255, default="DHIS2")
     session_store = SessionStore(session_key="dhis2_api_12904rs")
 
-    def set_interval(interval, times=-1):
-        # This will be the actual decorator,
-        # with fixed interval and times parameter
-        def outer_wrap(function):
-            # This will be the function to be
-            # called
-            def wrap(*args, **kwargs):
-                stop = threading.Event()
+    @staticmethod
+    def get_dhis2_server():
+        return ApiAuthentication.objects.get(id=1)
 
-                # This is another function to be executed
-                # in a different thread to simulate setInterval
-                def inner_wrap():
-                    i = 0
-                    while i != times and not stop.isSet():
-                        stop.wait(interval)
-                        function(*args, **kwargs)
-                        i += 1
+    def get_clear_text_password(self):
+        return _decrypt(cipher_text=self.get_dhis2_server().password)
 
-                t = threading.Timer(0, inner_wrap)
-                t.daemon = True
-                t.start()
-                return stop
-
-            return wrap
-
-        return outer_wrap
-
-    @set_interval(300.0)
-    def refresh_oauth2_token(self):
-        r = requests.post(
-            self.server+"uaa/oauth/token",
-            headers={
-                "Authorization": "Basic " + base64.b64encode(self.client_id + ":" + self.client_secret),
-                "Accept": "application/json"
-            },
-            params={
-                "grant_type": "refresh_token",
-                "refresh_token": json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
-                    .replace("'", '"'))["refresh_token"]
-            },
-            verify=True
-        )
-
-        response = str(r.json())
-        # print("Response @ refresh_oauth2 ", response)
-        self.session_store[self.oauth2_token_variable_name] = response
-        self.session_store.save()
-
-    def get_oauth2_token(self):
-        r = requests.post(
-            self.server+"uaa/oauth/token",
-            headers={
-                "Authorization": "Basic "+base64.b64encode(self.client_id+":"+self.client_secret),
-                "Accept": "application/json"
-            },
-            params={
-                "grant_type": "password",
-                "username": self.username,
-                "password": self.password
-            },
-            verify=True
-        )
-
-        response = str(r.json())
-        # print("Response @ get_oauth2 ", response, r.url, r.status_code)
-        self.session_store[self.oauth2_token_variable_name] = response
-        self.session_store.save()
-        # self.refresh_oauth2_token()
+    # def set_interval(interval, times=-1):
+    #     # This will be the actual decorator,
+    #     # with fixed interval and times parameter
+    #     def outer_wrap(function):
+    #         # This will be the function to be
+    #         # called
+    #         def wrap(*args, **kwargs):
+    #             stop = threading.Event()
+    #
+    #             # This is another function to be executed
+    #             # in a different thread to simulate setInterval
+    #             def inner_wrap():
+    #                 i = 0
+    #                 while i != times and not stop.isSet():
+    #                     stop.wait(interval)
+    #                     function(*args, **kwargs)
+    #                     i += 1
+    #
+    #             t = threading.Timer(0, inner_wrap)
+    #             t.daemon = True
+    #             t.start()
+    #             return stop
+    #
+    #         return wrap
+    #
+    #     return outer_wrap
+    #
+    # @set_interval(300.0)
+    # def refresh_oauth2_token(self):
+    #     r = requests.post(
+    #         self.server+"uaa/oauth/token",
+    #         headers={
+    #             "Authorization": "Basic " + base64.b64encode(self.client_id + ":" + self.client_secret),
+    #             "Accept": "application/json"
+    #         },
+    #         params={
+    #             "grant_type": "refresh_token",
+    #             "refresh_token": json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
+    #                 .replace("'", '"'))["refresh_token"]
+    #         },
+    #         verify=True
+    #     )
+    #
+    #     response = str(r.json())
+    #     # print("Response @ refresh_oauth2 ", response)
+    #     self.session_store[self.oauth2_token_variable_name] = response
+    #     self.session_store.save()
+    #
+    # def get_oauth2_token(self):
+    #     r = requests.post(
+    #         self.server+"uaa/oauth/token",
+    #         headers={
+    #             "Authorization": "Basic "+base64.b64encode(self.client_id+":"+self.client_secret),
+    #             "Accept": "application/json"
+    #         },
+    #         params={
+    #             "grant_type": "password",
+    #             "username": self.username,
+    #             "password": self.password
+    #         },
+    #         verify=True
+    #     )
+    #
+    #     response = str(r.json())
+    #     # print("Response @ get_oauth2 ", response, r.url, r.status_code)
+    #     self.session_store[self.oauth2_token_variable_name] = response
+    #     self.session_store.save()
+    #     # self.refresh_oauth2_token()
 
     def get_org_unit_id(self, code):
         r = requests.get(
-            self.server + "api/organisationUnits.json",
+            self.get_dhis2_server().server + "organisationUnits.json",
             headers={
                 # "Authorization": "Bearer " +
                 #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
                 #                             .replace("'", '"'))["access_token"],
-                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Authorization": "Basic " + base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             params={
@@ -1387,12 +1395,12 @@ class DhisAuth(ApiAuthentication):
 
     def get_org_unit(self, org_unit_id):
         r = requests.get(
-            self.server + "api/organisationUnits/"+org_unit_id,
+            self.get_dhis2_server().server + "organisationUnits/"+org_unit_id,
             headers={
                 # "Authorization": "Bearer " +
                 #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
                 #                             .replace("'", '"'))["access_token"],
-                "Authorization": "Basic "+base64.b64encode(self.username+":"+self.password),
+                "Authorization": "Basic "+base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             verify=True
@@ -1409,11 +1417,11 @@ class DhisAuth(ApiAuthentication):
 
     def get_parent_id(self, facility_name):
         r = requests.get(
-            self.server+"api/organisationUnits.json",
+            self.get_dhis2_server().server+"organisationUnits.json",
             headers={
                 # "Authorization": "Bearer " + json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
                 #     .replace("'", '"'))["access_token"],
-                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Authorization": "Basic " + base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             params={
@@ -1442,11 +1450,11 @@ class DhisAuth(ApiAuthentication):
 
     def push_facility_to_dhis2(self, new_facility_payload):
         r = requests.post(
-            self.server+"api/organisationUnits",
+            self.get_dhis2_server().server+"organisationUnits",
             headers={
                 # "Authorization": "Bearer " + json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
                 #                                         .replace("'", '"'))["access_token"],
-                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Authorization": "Basic " + base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             json=new_facility_payload,
@@ -1466,12 +1474,12 @@ class DhisAuth(ApiAuthentication):
 
     def push_facility_updates_to_dhis2(self, org_unit_id, facility_updates_payload):
         r = requests.put(
-            self.server + "api/organisationUnits/"+org_unit_id,
+            self.get_dhis2_server().server + "organisationUnits/"+org_unit_id,
             headers={
                 # "Authorization": "Bearer " +
                 #                  json.loads(self.session_store[self.oauth2_token_variable_name].replace("u", "")
                 #                             .replace("'", '"'))["access_token"],
-                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Authorization": "Basic " + base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             json=facility_updates_payload,
@@ -1490,9 +1498,9 @@ class DhisAuth(ApiAuthentication):
     def add_org_unit_to_group(self, org_unit_group_id, org_unit_id):
 
         r_get_group = requests.get(
-            self.server+"api/organisationUnitGroups/"+org_unit_group_id,
+            self.get_dhis2_server().server+"organisationUnitGroups/"+org_unit_group_id,
             headers={
-                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Authorization": "Basic " + base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             params={
@@ -1506,9 +1514,9 @@ class DhisAuth(ApiAuthentication):
         organisation_group["organisationUnits"].append({"id":org_unit_id})
 
         r = requests.put(
-            self.server+"api/organisationUnitGroups/"+org_unit_group_id,
+            self.get_dhis2_server().server+"organisationUnitGroups/"+org_unit_group_id,
             headers={
-                "Authorization": "Basic " + base64.b64encode(self.username + ":" + self.password),
+                "Authorization": "Basic " + base64.b64encode(self.get_dhis2_server().username + ":" + self.get_clear_text_password()),
                 "Accept": "application/json"
             },
             json=organisation_group,
@@ -1620,6 +1628,7 @@ class FacilityUpdates(AbstractBase):
                 setattr(self.facility, field_name, old_value)
         self.facility.save(allow_save=True)
 
+    # @shared_task(name='push_facility_updates_to_dhis2')
     def push_facility_updates(self):
         from mfl_gis.models import FacilityCoordinates
         import re
@@ -2094,6 +2103,7 @@ class FacilityApproval(AbstractBase):
         self.facility.save(allow_save=True)
         self.update_facility_rejection()
 
+    # @shared_task(name='assign_org_unit_groups')
     def assign_org_unit_groups(self):
         # print("Facility Type Details: " + str(self.facility.facility_type))
         # print("Facility Type Name: " + str(self.facility.facility_type_name))
@@ -2183,6 +2193,7 @@ class FacilityApproval(AbstractBase):
         if facility_keph_level_id is not None:
             self.dhis2_api_auth.add_org_unit_to_group(facility_keph_level_id["dhis_id"], org_unit_id)
 
+    # @shared_task(name='push_new_facility_to_dhis2')
     def push_new_facility(self):
         from mfl_gis.models import FacilityCoordinates
         import re

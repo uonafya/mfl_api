@@ -1,4 +1,4 @@
-#!/home/elon/.virtualenv/mfl_api python2.7
+    #!/home/elon/.virtualenv/mfl_api python2.7
 
 from conn import myConnection as conn
 import requests
@@ -6,8 +6,8 @@ import base64
 from datetime import datetime
 
 
-url = "https://test.hiskenya.org/dev/api/"
-cred = base64.b64encode("healthit:hEALTHIT2017")
+url = "https://test.hiskenya.org/kenya/api/29/"
+cred = base64.b64encode("healthit:@Protocol1")
 
 
 import urllib3
