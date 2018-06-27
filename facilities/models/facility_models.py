@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import datetime
+import threading
 
 from celery import shared_task
 from dateutil import parser
@@ -19,6 +20,7 @@ from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import ArrayField
 
 from common.utilities.crypto import _decrypt
+from facilities.t_utils.push_facility_threads import TPushFacilityUpdates, TPushNewFacility, TAssignOrgUnitGroups
 from users.models import JobTitle  # NOQA
 from search.search_utils import index_instance
 from common.models import (
@@ -1629,14 +1631,18 @@ class FacilityUpdates(AbstractBase):
         self.facility.save(allow_save=True)
 
     # @shared_task(name='push_facility_updates_to_dhis2')
-    def push_facility_updates(self):
+    @staticmethod
+    def push_facilitTy_updates(dhis2_api_auth, facility):
+
+        print("Started Thread (Facility Updates)")
+
         from mfl_gis.models import FacilityCoordinates
         import re
         # self.dhis2_api_auth.get_oauth2_token()
 
-        dhis2_parent_id = self.dhis2_api_auth.get_parent_id(self.facility.ward_name)
-        dhis2_org_unit_id = self.dhis2_api_auth.get_org_unit_id(self.facility.code)
-        new_facility_updates_payload = self.dhis2_api_auth.get_org_unit(dhis2_org_unit_id)
+        dhis2_parent_id = dhis2_api_auth.get_parent_id(facility.ward_name)
+        dhis2_org_unit_id = dhis2_api_auth.get_org_unit_id(facility.code)
+        new_facility_updates_payload = dhis2_api_auth.get_org_unit(dhis2_org_unit_id)
 
         # new_facility_updates_payload = {
         #     "code": str(self.facility.code),
@@ -1792,22 +1798,27 @@ class FacilityUpdates(AbstractBase):
         # if facility_keph_level_id is not None:
         #     self.dhis2_api_auth.add_org_unit_to_group(facility_keph_level_id["dhis_id"], org_unit_id)
 
-        new_facility_updates_payload["code"] = str(self.facility.code)
-        new_facility_updates_payload["name"] = str(self.facility.name)
-        new_facility_updates_payload["shortName"] = str(self.facility.name)
-        new_facility_updates_payload["displayName"] = str(self.facility.official_name)
+        new_facility_updates_payload["code"] = str(facility.code)
+        new_facility_updates_payload["name"] = str(facility.name)
+        new_facility_updates_payload["shortName"] = str(facility.name)
+        new_facility_updates_payload["displayName"] = str(facility.official_name)
         new_facility_updates_payload["parent"]["id"] = dhis2_parent_id
-        new_facility_updates_payload["openingDate"] = str(self.facility.date_established.strftime("%Y-%m-%d"))
-        new_facility_updates_payload["coordinates"] = self.dhis2_api_auth.format_coordinates(
+        new_facility_updates_payload["openingDate"] = str(facility.date_established.strftime("%Y-%m-%d"))
+        new_facility_updates_payload["coordinates"] = dhis2_api_auth.format_coordinates(
                 re.search(r'\((.*?)\)', str(FacilityCoordinates.objects.values('coordinates')
-                                            .get(facility_id=self.facility.id)['coordinates'])).group(1))
+                                            .get(facility_id=facility.id)['coordinates'])).group(1))
 
         # print("Names;", "Official Name:", self.facility.official_name, "Name:", self.facility.name)
 
         print("Facility Updates Push Payload => ", new_facility_updates_payload)
-        self.dhis2_api_auth.push_facility_updates_to_dhis2(dhis2_org_unit_id, new_facility_updates_payload)
+        dhis2_api_auth.push_facility_updates_to_dhis2(dhis2_org_unit_id, new_facility_updates_payload)
+
+        print("Finished Thread (Facility Updates)")
 
     def update_facility(self):
+
+        from mfl_gis.models import FacilityCoordinates
+
         if self.facility_updates:
             data = json.loads(self.facility_updates)
             for field_changed in data:
@@ -1819,12 +1830,9 @@ class FacilityUpdates(AbstractBase):
                 else:
                     value = field_changed.get("actual_value")
                 setattr(self.facility, field_name, value)
-            # self.facility.save(allow_save=True)
-            print("Hellow! MFL!")
-            self.push_facility_updates()
-            '''TODO
-            Push update to DHIS2
-            '''
+            self.facility.save(allow_save=True)
+            TPushFacilityUpdates(self.dhis2_api_auth, self.facility, FacilityCoordinates).start()
+
 
     def update_facility_services(self):
         from facilities.utils import create_facility_services
@@ -2093,8 +2101,12 @@ class FacilityApproval(AbstractBase):
         else:
             self.facility.rejected = False
             self.facility.approved = True
-            self.push_new_facility()
-            self.assign_org_unit_groups()
+
+            from mfl_gis.models import FacilityCoordinates
+
+            TPushNewFacility(self.dhis2_api_auth, self.facility, FacilityCoordinates).start()
+            TAssignOrgUnitGroups(self.dhis2_api_auth, self.facility, Owner, OwnerType, FacilityType).start()
+
             self.facility.is_published = True
         self.facility.save(allow_save=True)
 
@@ -2105,6 +2117,7 @@ class FacilityApproval(AbstractBase):
 
     # @shared_task(name='assign_org_unit_groups')
     def assign_org_unit_groups(self):
+        print ("Thread Started Mahn!")
         # print("Facility Type Details: " + str(self.facility.facility_type))
         # print("Facility Type Name: " + str(self.facility.facility_type_name))
         # print("Facility Regulatory Body: " + str(self.facility.regulatory_body))
@@ -2192,6 +2205,8 @@ class FacilityApproval(AbstractBase):
 
         if facility_keph_level_id is not None:
             self.dhis2_api_auth.add_org_unit_to_group(facility_keph_level_id["dhis_id"], org_unit_id)
+
+        print("Thread Ended Mahn!")
 
     # @shared_task(name='push_new_facility_to_dhis2')
     def push_new_facility(self):
