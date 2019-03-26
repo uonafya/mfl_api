@@ -50,15 +50,15 @@ kombu==3.0.37
 Markdown==2.5.2
 MarkupSafe==1.0
 mccabe==0.6.1
--e git+https://github.com/uonafya/mfl_api.git@3241c61507fecbc83fd8cc28d3d72be209c92f91#egg=mfl-mapping_models
+#-e git+https://github.com/uonafya/mfl_api.git@3241c61507fecbc83fd8cc28d3d72be209c92f91#egg=mfl-mapping_models
 mock==1.0.1
 model-mommy==1.2.6
 oauthlib==2.0.6
 paramiko==1.18.4
 pdfrw==0.4
 pep8==1.7.1
-pkg-resources==0.0.0
-psycopg2==2.5.5
+#pkg-resources==0.0.0
+#psycopg2==2.5.5
 py==1.5.2
 pycparser==2.18
 pycrypto==2.6.1
