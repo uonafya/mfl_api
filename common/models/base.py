@@ -248,7 +248,7 @@ class SequenceMixin(object):
 
 class ApiAuthentication(models.Model):
     username = models.CharField(max_length=255, default="healthit", null=False, blank=False)
-    password = models.CharField(max_length=255, default="hEALTHIT2017", null=False, blank=False)
+    password = models.CharField(max_length=255, default="Test1@hiskenya", null=False, blank=False)
     client_id = models.CharField(max_length=255, default="101", null=False, blank=False)
     client_secret = models.CharField(max_length=255, default="873079d99-95b4-46f5-8369-9f23a3dd877", null=False,
                                      blank=False)
